@@ -273,14 +273,25 @@
         </div>
     </div>
 
-    <script>
-        // Initialize Firebase variables (though not used for this local storage version, kept for potential future expansion)
+    <script type="module">
+        // Firebase SDK Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Initialize Firebase variables (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
+        // --- Firebase Initialization ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let currentUserId = null; // To store the authenticated user's ID
+
         // --- Global Variables ---
-        let squadsData = []; // Array to hold all squad data
+        let squadsData = []; // Array to hold all squad data, synced with Firestore
         let currentSquadId = null; // ID of the currently selected squad
         let timerInterval;
         let startTime;
@@ -304,47 +315,11 @@
         const targetPenaltyInput = document.getElementById('targetPenaltyInput');
         const applyPenaltiesBtn = document.getElementById('applyPenaltiesBtn');
         const scoreboardTableBody = document.querySelector('#scoreboardTable tbody');
-        const squadPerformanceTableBody = document.querySelector('#squadPerformanceTable tbody'); // New element
+        const squadPerformanceTableBody = document.querySelector('#squadPerformanceTable tbody');
         const roadmapContent = document.getElementById('roadmapContent');
         const messageBox = document.getElementById('messageBox');
         const messageText = document.getElementById('messageText');
         const closeMessageBox = document.getElementById('closeMessageBox');
-
-        // --- Data Initialization and Persistence ---
-        function loadData() {
-            const storedData = localStorage.getItem('blackKnightsBMSData');
-            if (storedData) {
-                squadsData = JSON.parse(storedData);
-            } else {
-                // Initialize with default platoons and squads
-                const platoons = ['Crusaders', 'Samurai', 'Goonies', 'Nightsalkers'];
-                platoons.forEach(platoon => {
-                    for (let i = 1; i <= 4; i++) {
-                        squadsData.push({
-                            id: `${platoon}-Squad-${i}`,
-                            platoon: platoon,
-                            squad: `Squad ${i}`,
-                            part1Time: null, // Time in seconds (raw)
-                            part1Penalty: 0, // Additional time in seconds
-                            part1ActualTime: null, // part1Time + part1Penalty
-                            part2Targets: null, // Average targets hit (raw)
-                            part2Penalty: 0, // Deducted targets
-                            part2ActualTargets: null, // part2Targets - part2Penalty
-                            finalScore: null, // (part2ActualTargets / part1ActualTime)
-                            status: 'Not Started' // 'Not Started', 'Part 1 Complete', 'Part 2 Complete', 'Completed'
-                        });
-                    }
-                });
-                saveData(); // Save initial data
-            }
-            updateScoreboard(); // Update scoreboard on load
-            updateSquadPerformance(); // Update squad performance on load
-            generateRoadmap(); // Generate roadmap on load
-        }
-
-        function saveData() {
-            localStorage.setItem('blackKnightsBMSData', JSON.stringify(squadsData));
-        }
 
         // --- Utility Functions ---
         function formatTime(ms) {
@@ -364,8 +339,116 @@
             messageBox.style.display = 'none';
         });
 
+        // --- Firebase Data Operations ---
+
+        /**
+         * Initializes default squad data and saves it to Firestore if the collection is empty.
+         * This ensures the app has initial data when first run.
+         */
+        async function initializeDefaultSquadsAndSave() {
+            const platoons = ['Crusaders', 'Samurai', 'Goonies', 'Nightsalkers'];
+            const initialSquads = [];
+            platoons.forEach(platoon => {
+                for (let i = 1; i <= 4; i++) {
+                    initialSquads.push({
+                        id: `${platoon}-Squad-${i}`,
+                        platoon: platoon,
+                        squad: `Squad ${i}`,
+                        part1Time: null, // Time in seconds (raw)
+                        part1Penalty: 0, // Additional time in seconds
+                        part1ActualTime: null, // part1Time + part1Penalty
+                        part2Targets: null, // Average targets hit (raw)
+                        part2Penalty: 0, // Deducted targets
+                        part2ActualTargets: null, // part2Targets - part2Penalty
+                        finalScore: null, // (part2ActualTargets / part1ActualTime)
+                        status: 'Not Started' // 'Not Started', 'Part 1 Complete', 'Part 2 Complete', 'Completed'
+                    });
+                }
+            });
+
+            console.log("Initializing default squads and saving to Firestore...");
+            for (const squad of initialSquads) {
+                try {
+                    // Use the squad.id as the document ID for easy retrieval
+                    const docRef = doc(db, `artifacts/${appId}/public/data/squads`, squad.id);
+                    await setDoc(docRef, squad);
+                } catch (e) {
+                    console.error("Error adding initial squad document: ", e);
+                    showMessage("Error initializing default squads. Check console for details.");
+                }
+            }
+            console.log("Default squads initialized.");
+            // The onSnapshot listener will automatically pick up these changes
+        }
+
+        /**
+         * Sets up a real-time listener for squad data from Firestore.
+         * Updates the global squadsData array and refreshes the UI.
+         */
+        function loadSquadsFromFirestore() {
+            if (!db) {
+                console.error("Firestore not initialized when trying to load data.");
+                return;
+            }
+
+            const squadsCollectionRef = collection(db, `artifacts/${appId}/public/data/squads`);
+
+            onSnapshot(squadsCollectionRef, (snapshot) => {
+                const fetchedSquads = [];
+                snapshot.forEach(doc => {
+                    fetchedSquads.push(doc.data());
+                });
+
+                if (fetchedSquads.length === 0) {
+                    // If no data in Firestore, initialize default squads and save them
+                    initializeDefaultSquadsAndSave();
+                } else {
+                    squadsData = fetchedSquads;
+                    console.log("Squads data loaded/updated from Firestore:", squadsData);
+                    updateUIBasedOnData(); // Centralized UI update after data sync
+                }
+            }, (error) => {
+                console.error("Error fetching squads from Firestore:", error);
+                showMessage("Failed to load competition data. Please check your internet connection.");
+            });
+        }
+
+        /**
+         * Saves a single squad's data to Firestore.
+         * @param {Object} squadToSave - The squad object to save.
+         */
+        async function saveSquadToFirestore(squadToSave) {
+            if (!db || !currentUserId) { // Ensure Firebase and auth are ready
+                console.error("Firestore or authentication not ready. Cannot save data.");
+                showMessage("Database not ready. Please wait a moment or refresh.");
+                return;
+            }
+            try {
+                // Use the squad.id as the document ID
+                const docRef = doc(db, `artifacts/${appId}/public/data/squads`, squadToSave.id);
+                await setDoc(docRef, squadToSave); // setDoc will create or overwrite the document
+                console.log("Squad document updated in Firestore:", squadToSave.id);
+                // No need to call updateUI here, onSnapshot will handle it.
+            } catch (e) {
+                console.error("Error updating document in Firestore: ", e);
+                showMessage("Failed to save data. Please try again.");
+            }
+        }
+
+        // --- Centralized UI Update Function ---
+        /**
+         * Calls all UI update functions after data has been loaded or changed.
+         */
+        function updateUIBasedOnData() {
+            populateSquadsDropdown(); // Re-populate dropdown to reflect any new/changed squads
+            updateUIForSelectedSquad();
+            updateScoreboard();
+            updateSquadPerformance();
+            generateRoadmap();
+        }
+
         // --- Squad Selection Logic ---
-        function populateSquads() {
+        function populateSquadsDropdown() {
             const selectedPlatoon = platoonSelect.value;
             squadSelect.innerHTML = '<option value="">Select Squad</option>';
             if (selectedPlatoon) {
@@ -377,9 +460,14 @@
                     squadSelect.appendChild(option);
                 });
             }
-            // Reset current squad selection if platoon changes
-            currentSquadId = null;
-            updateUIForSelectedSquad();
+            // If currentSquadId is not in the new list, reset it
+            if (currentSquadId && !squadsData.some(s => s.id === currentSquadId)) {
+                currentSquadId = null;
+                squadSelect.value = ""; // Clear dropdown selection
+            } else if (currentSquadId) {
+                squadSelect.value = currentSquadId; // Keep selection if still valid
+            }
+            updateUIForSelectedSquad(); // Update UI after dropdown is populated
         }
 
         function updateUIForSelectedSquad() {
@@ -411,13 +499,10 @@
                 // Update Part 2 UI
                 if (selectedSquad.part2Targets !== null) {
                     avgTargetsDisplay.textContent = selectedSquad.part2Targets.toFixed(2);
-                    // Re-populate lane inputs if needed (though not strictly necessary as scores are saved)
-                    // For simplicity, we'll just show the average.
-                    // If you want to show individual lane scores, you'd need to store them.
                 } else {
                     avgTargetsDisplay.textContent = '0';
                 }
-                populateFiringLaneInputs(); // Ensure lane inputs are generated
+                populateFiringLaneInputs(); // Ensure lane inputs are generated (values are reset on selection)
 
                 // Update Penalties UI
                 timePenaltyInput.value = selectedSquad.part1Penalty;
@@ -439,7 +524,7 @@
             }
         }
 
-        platoonSelect.addEventListener('change', populateSquads);
+        platoonSelect.addEventListener('change', populateSquadsDropdown);
         squadSelect.addEventListener('change', () => {
             currentSquadId = squadSelect.value;
             updateUIForSelectedSquad();
@@ -479,7 +564,7 @@
             timerDisplay.textContent = formatTime(elapsedTime);
         }
 
-        savePart1Btn.addEventListener('click', () => {
+        savePart1Btn.addEventListener('click', async () => {
             if (!currentSquadId) {
                 showMessage('Please select a squad first.');
                 return;
@@ -501,12 +586,8 @@
                 if (squad.status === 'Not Started') {
                     squad.status = 'Part 1 Complete';
                 }
-                calculateAndSaveFinalScore(squad);
-                saveData();
-                updateUIForSelectedSquad(); // Refresh UI
-                updateScoreboard();
-                updateSquadPerformance(); // Update squad performance
-                generateRoadmap();
+                calculateAndSaveFinalScore(squad); // Updates squad.finalScore and status
+                await saveSquadToFirestore(squad); // Save to Firestore
                 showMessage(`Part 1 score saved for ${squad.id}: ${formatTime(squad.part1Time * 1000)}`);
             }
         });
@@ -560,7 +641,7 @@
             avgTargetsDisplay.textContent = averageTargets.toFixed(2);
         });
 
-        savePart2Btn.addEventListener('click', () => {
+        savePart2Btn.addEventListener('click', async () => {
             if (!currentSquadId) {
                 showMessage('Please select a squad first.');
                 return;
@@ -575,23 +656,19 @@
                 squad.part2Targets = currentAvgTargets;
                 squad.part2ActualTargets = squad.part2Targets - squad.part2Penalty;
                 if (squad.status === 'Part 1 Complete' || squad.status === 'Not Started') {
-                    squad.status = 'Part 2 Complete'; // Can be 'Completed' if Part 1 was already done
+                    squad.status = 'Part 2 Complete';
                 }
                 if (squad.part1Time !== null && squad.part2Targets !== null) {
                     squad.status = 'Completed';
                 }
-                calculateAndSaveFinalScore(squad);
-                saveData();
-                updateUIForSelectedSquad(); // Refresh UI
-                updateScoreboard();
-                updateSquadPerformance(); // Update squad performance
-                generateRoadmap();
+                calculateAndSaveFinalScore(squad); // Updates squad.finalScore and status
+                await saveSquadToFirestore(squad); // Save to Firestore
                 showMessage(`Part 2 score saved for ${squad.id}: ${squad.part2Targets.toFixed(2)} average targets.`);
             }
         });
 
         // --- Penalties Logic ---
-        applyPenaltiesBtn.addEventListener('click', () => {
+        applyPenaltiesBtn.addEventListener('click', async () => {
             if (!currentSquadId) {
                 showMessage('Please select a squad first.');
                 return;
@@ -612,12 +689,8 @@
                     squad.part2ActualTargets = squad.part2Targets - squad.part2Penalty;
                 }
 
-                calculateAndSaveFinalScore(squad);
-                saveData();
-                updateUIForSelectedSquad(); // Refresh UI
-                updateScoreboard();
-                updateSquadPerformance(); // Update squad performance
-                generateRoadmap();
+                calculateAndSaveFinalScore(squad); // Updates squad.finalScore and status
+                await saveSquadToFirestore(squad); // Save to Firestore
                 showMessage(`Penalties applied for ${squad.id}.`);
             }
         });
@@ -836,9 +909,26 @@
 
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-            populateSquads(); // Populate initial squad dropdown
-            updateUIForSelectedSquad(); // Set initial UI state
+            // Authenticate and then load data
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                    console.log("Authenticated as:", currentUserId);
+                    loadSquadsFromFirestore(); // Start listening for data
+                } else {
+                    // Sign in anonymously if no user is found
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Firebase authentication error:", error);
+                        showMessage("Authentication failed. Please try refreshing the page.");
+                    }
+                }
+            });
         });
     </script>
 </body>
