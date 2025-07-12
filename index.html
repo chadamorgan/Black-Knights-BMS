@@ -138,6 +138,11 @@
         .message-box button {
             margin-top: 10px;
         }
+        .message-box .confirm-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -146,10 +151,14 @@
         <div id="main-content" class="space-y-8">
             <h1 class="text-4xl text-center mb-8">Black Knights BMS</h1>
 
-            <!-- Message Box for alerts -->
+            <!-- Message Box for alerts and confirmations -->
             <div id="messageBox" class="message-box">
                 <p id="messageText"></p>
-                <button id="closeMessageBox" class="btn btn-primary">OK</button>
+                <div id="confirmButtons" class="confirm-buttons" style="display: none;">
+                    <button id="confirmYes" class="btn btn-danger">Yes</button>
+                    <button id="confirmNo" class="btn btn-secondary">No</button>
+                </div>
+                <button id="closeMessageBox" class="btn btn-primary" style="display: none;">OK</button>
             </div>
 
             <!-- Platoon & Squad Selection -->
@@ -224,6 +233,12 @@
                 </div>
                 <button id="applyPenaltiesBtn" class="btn btn-danger w-full" disabled>Apply Penalties</button>
             </div>
+
+            <!-- Admin Tools -->
+            <div class="section-card">
+                <h2 class="text-2xl mb-4">Admin Tools</h2>
+                <button id="resetAllDataBtn" class="btn btn-danger w-full">Reset All Data</button>
+            </div>
         </div>
 
         <!-- Sidebar for Scoreboard and Roadmap -->
@@ -277,7 +292,7 @@
         // Firebase SDK Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Initialize Firebase variables (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -319,7 +334,11 @@
         const roadmapContent = document.getElementById('roadmapContent');
         const messageBox = document.getElementById('messageBox');
         const messageText = document.getElementById('messageText');
+        const confirmButtons = document.getElementById('confirmButtons');
+        const confirmYesBtn = document.getElementById('confirmYes');
+        const confirmNoBtn = document.getElementById('confirmNo');
         const closeMessageBox = document.getElementById('closeMessageBox');
+        const resetAllDataBtn = document.getElementById('resetAllDataBtn'); // New button
 
         // --- Utility Functions ---
         function formatTime(ms) {
@@ -330,14 +349,49 @@
             return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
         }
 
-        function showMessage(message) {
+        /**
+         * Displays a message box. Can be used for simple alerts or confirmations.
+         * @param {string} message The message to display.
+         * @param {boolean} isConfirm If true, shows Yes/No buttons; otherwise, shows an OK button.
+         * @returns {Promise<boolean>} Resolves to true for 'Yes', false for 'No' (only if isConfirm is true).
+         */
+        function showMessage(message, isConfirm = false) {
             messageText.textContent = message;
+            if (isConfirm) {
+                confirmButtons.style.display = 'flex';
+                closeMessageBox.style.display = 'none';
+            } else {
+                confirmButtons.style.display = 'none';
+                closeMessageBox.style.display = 'block';
+            }
             messageBox.style.display = 'flex';
-        }
 
-        closeMessageBox.addEventListener('click', () => {
-            messageBox.style.display = 'none';
-        });
+            return new Promise((resolve) => {
+                const handleClose = () => {
+                    messageBox.style.display = 'none';
+                    closeMessageBox.removeEventListener('click', handleClose);
+                    confirmYesBtn.removeEventListener('click', handleYes);
+                    confirmNoBtn.removeEventListener('click', handleNo);
+                };
+
+                const handleYes = () => {
+                    handleClose();
+                    resolve(true);
+                };
+
+                const handleNo = () => {
+                    handleClose();
+                    resolve(false);
+                };
+
+                if (isConfirm) {
+                    confirmYesBtn.addEventListener('click', handleYes);
+                    confirmNoBtn.addEventListener('click', handleNo);
+                } else {
+                    closeMessageBox.addEventListener('click', handleClose);
+                }
+            });
+        }
 
         // --- Firebase Data Operations ---
 
@@ -905,6 +959,54 @@
                 roadmapContent.appendChild(p);
             });
         }
+
+        // --- Reset All Data Functionality ---
+        resetAllDataBtn.addEventListener('click', async () => {
+            const confirmed = await showMessage(
+                'Are you sure you want to reset all competition data? This action cannot be undone.',
+                true // isConfirm = true
+            );
+
+            if (confirmed) {
+                if (!db || !currentUserId) {
+                    showMessage("Database not ready. Cannot reset data.");
+                    return;
+                }
+
+                try {
+                    showMessage("Resetting all data... Please wait.");
+                    const squadsCollectionRef = collection(db, `artifacts/${appId}/public/data/squads`);
+                    const querySnapshot = await getDocs(squadsCollectionRef);
+
+                    const deletePromises = [];
+                    querySnapshot.forEach((doc) => {
+                        deletePromises.push(deleteDoc(doc.ref));
+                    });
+
+                    await Promise.all(deletePromises);
+                    console.log("All squad documents deleted from Firestore.");
+
+                    // After deleting, re-initialize default squads
+                    await initializeDefaultSquadsAndSave();
+                    showMessage("All competition data has been reset and default squads re-initialized.");
+
+                    // Reset UI elements that might not be covered by onSnapshot's updateUIBasedOnData
+                    currentSquadId = null;
+                    platoonSelect.value = "";
+                    squadSelect.innerHTML = '<option value="">Select Squad</option>';
+                    updateUIForSelectedSquad(); // This will reset many fields
+                    timerDisplay.textContent = '00:00.00';
+                    elapsedTime = 0;
+                    clearInterval(timerInterval);
+
+                } catch (error) {
+                    console.error("Error resetting data:", error);
+                    showMessage("Failed to reset data. Please check console for details.");
+                }
+            } else {
+                showMessage("Data reset cancelled.");
+            }
+        });
 
 
         // --- Initialization ---
