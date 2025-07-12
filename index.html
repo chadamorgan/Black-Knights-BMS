@@ -703,7 +703,7 @@
          */
         function formatTime(ms) {
             const totalSeconds = Math.floor(ms / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
+            const hours = Math.floor((totalSeconds % 3600) / 60);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
 
@@ -1057,9 +1057,11 @@
 
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
-            // Firebase authentication and data loading is handled by the script in the head.
-            // The `updateUI` function will be called once data is loaded via `onSnapshot`.
-            // Initial UI setup will be handled by the Firestore listeners.
+            // Ensure dropdowns are populated immediately when the DOM is ready
+            populatePlatoonSelect();
+            populateSquadSelect(); // This will initially populate with "-- Select Squad --"
+            updateCurrentSquadDisplay(); // This will initially show "None Selected"
+            // Firebase authentication and data loading will then trigger updateUI via onSnapshot
         });
     </script>
 </body>
