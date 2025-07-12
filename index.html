@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platoon Competition Scoreboard</title>
+    <style>
+        :root {
+            --primary-bg: #2c3e50;
+            --secondary-bg: #34495e;
+            --accent-color: #e74c3c;
+            --text-color: #ecf0f1;
+            --border-color: #34495e;
+            --button-hover: #c0392b;
+            --input-bg: #4a6572;
+            --input-text: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--secondary-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2, h3 {
+            color: var(--accent-color);
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        select, input[type="number"], input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus, input[type="number"]:focus, input[type="text"]:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .timer-display {
+            font-size: 3em;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        #firingLanesContainer input {
+            margin-bottom: 10px;
+        }
+
+        .scoreboard-container {
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--input-bg);
+        }
+
+        tr:hover {
+            background-color: #4a6572;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #27ae60;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+
+        .error {
+            background-color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Platoon Competition Scoreboard</h1>
+
+        <div class="section">
+            <h2>Select Platoon and Squad</h2>
+            <div class="form-group">
+                <label for="platoonSelect">Platoon:</label>
+                <select id="platoonSelect">
+                    <option value="">-- Select Platoon --</option>
+                    <option value="Crusaders">Platoon 1 - Crusaders</option>
+                    <option value="Samurai">Platoon 2 - Samurai</option>
+                    <option value="Goonies">Platoon 3 - Goonies</option>
+                    <option value="Nightalkers">Platoon 4 - Nightalkers</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="squadSelect">Squad:</label>
+                <select id="squadSelect">
+                    <option value="">-- Select Squad --</option>
+                    <option value="Squad 1">Squad 1</option>
+                    <option value="Squad 2">Squad 2</option>
+                    <option value="Squad 3">Squad 3</option>
+                    <option value="Squad 4">Squad 4</option>
+                </select>
+            </div>
+            <button onclick="setCurrentSquad()">Set Current Squad</button>
+            <p><strong>Current Squad Scoring:</strong> <span id="currentSquadDisplay">None Selected</span></p>
+        </div>
+
+        <div class="section">
+            <h2>Part 1: Equipment Move Timer</h2>
+            <p>Track the time for the equipment move. The time recorded here will be used in the final score calculation.</p>
+            <div class="timer-display" id="timerDisplay">00:00.00</div>
+            <button onclick="startTimer()">Start Timer</button>
+            <button onclick="stopTimer()">Stop Timer</button>
+            <button onclick="resetTimer()">Reset Timer</button>
+            <p>Recorded Time: <span id="recordedTime">00:00.00</span></p>
+        </div>
+
+        <div class="section">
+            <h2>Part 2: Firing Range Scoring</h2>
+            <p>Enter the average targets hit for each firing lane. Each squad member fires at 40 targets.</p>
+            <div class="form-group">
+                <label for="numLanes">Number of Firing Lanes:</label>
+                <input type="number" id="numLanes" min="1" value="1" onchange="generateFiringLaneInputs()">
+            </div>
+            <div id="firingLanesContainer">
+                <label for="lane1Score">Lane 1 - Targets Hit (Avg):</label>
+                <input type="number" id="lane1Score" min="0" max="40" value="0">
+            </div>
+            <button onclick="calculateFiringRangeScore()">Calculate Firing Range Score</button>
+            <p>Total Average Targets Hit: <span id="firingRangeScoreDisplay">0</span></p>
+        </div>
+
+        <div class="section">
+            <h2>Penalties</h2>
+            <p>Add time to Part 1 or remove target hits from Part 2.</p>
+            <div class="form-group">
+                <label for="timePenalty">Time Penalty (seconds):</label>
+                <input type="number" id="timePenalty" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label for="targetPenalty">Target Hits Penalty:</label>
+                <input type="number" id="targetPenalty" value="0" min="0">
+            </div>
+            <button onclick="applyPenalties()">Apply Penalties</button>
+        </div>
+
+        <div class="section">
+            <h2>Finalize Squad Score</h2>
+            <p>Once both parts are complete and penalties applied, finalize the score for the current squad.</p>
+            <button onclick="submitSquadScore()">Submit Squad Score</button>
+            <div class="message" id="successMessage"></div>
+        </div>
+
+        <div class="scoreboard-container section">
+            <h2>Live Scoreboard</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Platoon</th>
+                        <th>Squad</th>
+                        <th>Equipment Move Time (s)</th>
+                        <th>Targets Hit</th>
+                        <th>Raw Score (T/T)</th>
+                        <th>Adjusted Time (s)</th>
+                        <th>Adjusted Targets Hit</th>
+                        <th>Final Score (Adjusted T/T)</th>
+                    </tr>
+                </thead>
+                <tbody id="scoreboardBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Data storage for scores
+        let competitionData = JSON.parse(localStorage.getItem('competitionData')) || {};
+        const PLATOONS = ["Crusaders", "Samurai", "Goonies", "Nightalkers"];
+        const NUM_SQUADS = 4; // Each platoon has 4 squads
+
+        // Initialize competitionData if empty
+        PLATOONS.forEach(platoon => {
+            if (!competitionData[platoon]) {
+                competitionData[platoon] = {};
+                for (let i = 1; i <= NUM_SQUADS; i++) {
+                    competitionData[platoon][`Squad ${i}`] = {
+                        equipmentTime: 0,
+                        targetsHit: 0,
+                        penalties: { time: 0, targets: 0 },
+                        finalScore: 0
+                    };
+                }
+            }
+        });
+
+        let currentPlatoon = '';
+        let currentSquad = '';
+        let timerInterval;
+        let startTime;
+        let elapsedTime = 0;
+        let recordedTimeSeconds = 0;
+        let firingRangeScore = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateScoreboard();
+            const currentSquadDisplay = document.getElementById('currentSquadDisplay');
+            if (currentPlatoon && currentSquad) {
+                currentSquadDisplay.textContent = `${currentPlatoon} - ${currentSquad}`;
+            } else {
+                currentSquadDisplay.textContent = "None Selected";
+            }
+            generateFiringLaneInputs(); // Generate initial lane input
+        });
+
+        function setCurrentSquad() {
+            const platoonSelect = document.getElementById('platoonSelect');
+            const squadSelect = document.getElementById('squadSelect');
+
+            if (platoonSelect.value === "" || squadSelect.value === "") {
+                showMessage("Please select both a Platoon and a Squad.", "error");
+                return;
+            }
+
+            currentPlatoon = platoonSelect.value;
+            currentSquad = squadSelect.value;
+            document.getElementById('currentSquadDisplay').textContent = `${currentPlatoon} - ${currentSquad}`;
+            showMessage(`Scoring set for: ${currentPlatoon} - ${currentSquad}`, "success");
+            resetTimer(); // Reset timer for new squad
+            document.getElementById('numLanes').value = 1;
+            generateFiringLaneInputs();
+            document.getElementById('timePenalty').value = 0;
+            document.getElementById('targetPenalty').value = 0;
+            firingRangeScore = 0;
+            document.getElementById('firingRangeScoreDisplay').textContent = 0;
+        }
+
+        function startTimer() {
+            if (!currentPlatoon || !currentSquad) {
+                showMessage("Please select a Platoon and Squad first!", "error");
+                return;
+            }
+            if (!timerInterval) {
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(updateTimer, 10);
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            recordedTimeSeconds = elapsedTime / 1000;
+            document.getElementById('recordedTime').textContent = formatTime(elapsedTime);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            elapsedTime = 0;
+            recordedTimeSeconds = 0;
+            document.getElementById('timerDisplay').textContent = "00:00.00";
+            document.getElementById('recordedTime').textContent = "00:00.00";
+        }
+
+        function updateTimer() {
+            elapsedTime = Date.now() - startTime;
+            document.getElementById('timerDisplay').textContent = formatTime(elapsedTime);
+        }
+
+        function formatTime(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            const milliseconds = Math.floor((ms % 1000) / 10);
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
+        }
+
+        function generateFiringLaneInputs() {
+            const numLanes = parseInt(document.getElementById('numLanes').value);
+            const container = document.getElementById('firingLanesContainer');
+            container.innerHTML = ''; // Clear previous inputs
+
+            for (let i = 1; i <= numLanes; i++) {
+                const label = document.createElement('label');
+                label.htmlFor = `lane${i}Score`;
+                label.textContent = `Lane ${i} - Targets Hit (Avg):`;
+                container.appendChild(label);
+
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.id = `lane${i}Score`;
+                input.min = '0';
+                input.max = '40';
+                input.value = '0';
+                container.appendChild(input);
+            }
+        }
+
+        function calculateFiringRangeScore() {
+            const numLanes = parseInt(document.getElementById('numLanes').value);
+            let totalTargetsHit = 0;
+            let validLanes = 0;
+
+            for (let i = 1; i <= numLanes; i++) {
+                const input = document.getElementById(`lane${i}Score`);
+                if (input) {
+                    const score = parseFloat(input.value);
+                    if (!isNaN(score) && score >= 0 && score <= 40) {
+                        totalTargetsHit += score;
+                        validLanes++;
+                    } else {
+                        showMessage(`Invalid score entered for Lane ${i}. Please enter a number between 0 and 40.`, "error");
+                        return; // Stop calculation if any invalid score is found
+                    }
+                }
+            }
+
+            if (validLanes > 0) {
+                firingRangeScore = totalTargetsHit / validLanes;
+            } else {
+                firingRangeScore = 0;
+            }
+            document.getElementById('firingRangeScoreDisplay').textContent = firingRangeScore.toFixed(2);
+            showMessage("Firing Range Score Calculated!", "success");
+        }
+
+        function applyPenalties() {
+            const timePenalty = parseFloat(document.getElementById('timePenalty').value);
+            const targetPenalty = parseFloat(document.getElementById('targetPenalty').value);
+
+            if (currentPlatoon && currentSquad) {
+                competitionData[currentPlatoon][currentSquad].penalties.time = timePenalty;
+                competitionData[currentPlatoon][currentSquad].penalties.targets = targetPenalty;
+                showMessage(`Penalties applied for ${currentPlatoon} - ${currentSquad}.`, "success");
+            } else {
+                showMessage("Please select a Platoon and Squad first!", "error");
+            }
+        }
+
+        function submitSquadScore() {
+            if (!currentPlatoon || !currentSquad) {
+                showMessage("Please select a Platoon and Squad first!", "error");
+                return;
+            }
+
+            if (recordedTimeSeconds === 0) {
+                showMessage("Please record the Equipment Move time before submitting!", "error");
+                return;
+            }
+
+            if (firingRangeScore === 0 && parseInt(document.getElementById('numLanes').value) > 0) { // Check if lanes were intended to be scored
+                 showMessage("Please calculate the Firing Range Score before submitting!", "error");
+                 return;
+            }
+
+
+            const squadData = competitionData[currentPlatoon][currentSquad];
+
+            // Apply penalties for submission
+            const adjustedTime = recordedTimeSeconds + squadData.penalties.time;
+            const adjustedTargets = Math.max(0, firingRangeScore - squadData.penalties.targets); // Targets cannot go below 0
+
+            squadData.equipmentTime = recordedTimeSeconds; // Store raw time
+            squadData.targetsHit = firingRangeScore; // Store raw targets
+            squadData.adjustedEquipmentTime = adjustedTime; // Store adjusted time
+            squadData.adjustedTargetsHit = adjustedTargets; // Store adjusted targets
+
+            // Calculate final score: Adjusted Targets Hit / Adjusted Time
+            squadData.finalScore = adjustedTime > 0 ? (adjustedTargets / adjustedTime) : 0;
+
+            localStorage.setItem('competitionData', JSON.stringify(competitionData));
+            updateScoreboard();
+            showMessage(`Score submitted for ${currentPlatoon} - ${currentSquad}!`, "success");
+
+            // Reset inputs for next entry
+            resetTimer();
+            document.getElementById('numLanes').value = 1;
+            generateFiringLaneInputs();
+            document.getElementById('timePenalty').value = 0;
+            document.getElementById('targetPenalty').value = 0;
+            firingRangeScore = 0;
+            document.getElementById('firingRangeScoreDisplay').textContent = 0;
+            document.getElementById('platoonSelect').value = "";
+            document.getElementById('squadSelect').value = "";
+            currentPlatoon = '';
+            currentSquad = '';
+            document.getElementById('currentSquadDisplay').textContent = "None Selected";
+        }
+
+        function updateScoreboard() {
+            const scoreboardBody = document.getElementById('scoreboardBody');
+            scoreboardBody.innerHTML = ''; // Clear existing rows
+
+            let platoonScores = {};
+
+            PLATOONS.forEach(platoon => {
+                let totalPlatoonAdjustedTime = 0;
+                let totalPlatoonAdjustedTargets = 0;
+                let squadsCounted = 0;
+
+                for (let i = 1; i <= NUM_SQUADS; i++) {
+                    const squadName = `Squad ${i}`;
+                    const squadData = competitionData[platoon][squadName];
+
+                    const row = scoreboardBody.insertRow();
+                    row.insertCell().textContent = platoon;
+                    row.insertCell().textContent = squadName;
+                    row.insertCell().textContent = squadData.equipmentTime.toFixed(2);
+                    row.insertCell().textContent = squadData.targetsHit.toFixed(2);
+                    row.insertCell().textContent = (squadData.equipmentTime > 0 ? (squadData.targetsHit / squadData.equipmentTime).toFixed(4) : "0.0000"); // Raw Score
+
+                    // Adjusted values for display
+                    const displayAdjustedTime = (squadData.adjustedEquipmentTime !== undefined) ? squadData.adjustedEquipmentTime.toFixed(2) : 'N/A';
+                    const displayAdjustedTargets = (squadData.adjustedTargetsHit !== undefined) ? squadData.adjustedTargetsHit.toFixed(2) : 'N/A';
+                    const displayFinalScore = (squadData.finalScore !== undefined) ? squadData.finalScore.toFixed(4) : 'N/A';
+
+                    row.insertCell().textContent = displayAdjustedTime;
+                    row.insertCell().textContent = displayAdjustedTargets;
+                    row.insertCell().textContent = displayFinalScore;
+
+                    // Aggregate for platoon average
+                    if (squadData.adjustedEquipmentTime !== undefined && squadData.adjustedTargetsHit !== undefined) {
+                        totalPlatoonAdjustedTime += squadData.adjustedEquipmentTime;
+                        totalPlatoonAdjustedTargets += squadData.adjustedTargetsHit;
+                        squadsCounted++;
+                    }
+                }
+
+                // Add platoon average row
+                if (squadsCounted > 0) {
+                    const platoonAvgScore = totalPlatoonAdjustedTime > 0 ? (totalPlatoonAdjustedTargets / totalPlatoonAdjustedTime) : 0;
+                    platoonScores[platoon] = platoonAvgScore;
+
+                    const avgRow = scoreboardBody.insertRow();
+                    avgRow.style.fontWeight = 'bold';
+                    avgRow.style.backgroundColor = '#4CAF50'; /* Green for averages */
+                    avgRow.style.color = 'white';
+                    avgRow.insertCell().textContent = platoon;
+                    avgRow.insertCell().textContent = 'PLATOON AVERAGE';
+                    avgRow.insertCell().colSpan = 5; // Span across score columns
+                    avgRow.insertCell().textContent = platoonAvgScore.toFixed(4);
+                } else {
+                     platoonScores[platoon] = 0; // If no squads submitted, avg is 0
+                }
+            });
+
+            // Sort platoons by final average score for overall ranking
+            const sortedPlatoons = Object.entries(platoonScores).sort(([, scoreA], [, scoreB]) => scoreB - scoreA);
+
+            // Optional: Display overall platoon ranking (can be a separate section or within the scoreboard)
+            // For simplicity, let's just add a console log for now, but you could build a separate ranking table.
+            console.log("Overall Platoon Ranking:");
+            sortedPlatoons.forEach(([platoon, score], index) => {
+                console.log(`${index + 1}. ${platoon}: ${score.toFixed(4)}`);
+            });
+        }
+
+        function showMessage(message, type = "success") {
+            const msgElement = document.getElementById('successMessage');
+            msgElement.textContent = message;
+            msgElement.className = 'message'; // Reset classes
+            msgElement.classList.add(type);
+            msgElement.style.display = 'block';
+
+            setTimeout(() => {
+                msgElement.style.display = 'none';
+            }, 3000); // Hide after 3 seconds
+        }
+    </script>
+</body>
+</html>
