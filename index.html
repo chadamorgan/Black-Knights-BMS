@@ -290,9 +290,9 @@
 
     <script type="module">
         // Firebase SDK Imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } = "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, getDocs, deleteDoc } = "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Initialize Firebase variables (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -504,78 +504,31 @@
         // --- Squad Selection Logic ---
         function populateSquadsDropdown() {
             const selectedPlatoon = platoonSelect.value;
-            squadSelect.innerHTML = '<option value="">Select Squad</option>';
+            squadSelect.innerHTML = '<option value="">Select Squad</option>'; // Always start fresh
+
+            let squadsInCurrentPlatoon = [];
             if (selectedPlatoon) {
-                const squadsInPlatoon = squadsData.filter(s => s.platoon === selectedPlatoon);
-                squadsInPlatoon.forEach(squad => {
+                squadsInCurrentPlatoon = squadsData.filter(s => s.platoon === selectedPlatoon);
+                squadsInCurrentPlatoon.forEach(squad => {
                     const option = document.createElement('option');
                     option.value = squad.id;
                     option.textContent = squad.squad;
                     squadSelect.appendChild(option);
                 });
             }
-            // If currentSquadId is not in the new list, reset it
-            if (currentSquadId && !squadsData.some(s => s.id === currentSquadId)) {
-                currentSquadId = null;
-                squadSelect.value = ""; // Clear dropdown selection
-            } else if (currentSquadId) {
-                squadSelect.value = currentSquadId; // Keep selection if still valid
-            }
-            updateUIForSelectedSquad(); // Update UI after dropdown is populated
-        }
 
-        function updateUIForSelectedSquad() {
-            const selectedSquad = squadsData.find(s => s.id === currentSquadId);
+            // After populating options for the current platoon:
+            // Check if the previously selected squad (currentSquadId) is still valid for this platoon.
+            const isCurrentSquadValidForPlatoon = currentSquadId && squadsInCurrentPlatoon.some(s => s.id === currentSquadId);
 
-            // Enable/disable buttons based on squad selection
-            const isSquadSelected = currentSquadId !== null;
-            savePart1Btn.disabled = !isSquadSelected;
-            calculatePart2Btn.disabled = !isSquadSelected;
-            savePart2Btn.disabled = !isSquadSelected;
-            applyPenaltiesBtn.disabled = !isSquadSelected;
-
-            if (selectedSquad) {
-                // Update Part 1 UI
-                if (selectedSquad.part1Time !== null) {
-                    timerDisplay.textContent = formatTime(selectedSquad.part1Time * 1000);
-                    manualTimeInput.value = selectedSquad.part1Time;
-                    startTimerBtn.disabled = true;
-                    stopTimerBtn.disabled = true;
-                    resetTimerBtn.disabled = false;
-                } else {
-                    timerDisplay.textContent = '00:00.00';
-                    manualTimeInput.value = '';
-                    startTimerBtn.disabled = false;
-                    stopTimerBtn.disabled = true;
-                    resetTimerBtn.disabled = true;
-                }
-
-                // Update Part 2 UI
-                if (selectedSquad.part2Targets !== null) {
-                    avgTargetsDisplay.textContent = selectedSquad.part2Targets.toFixed(2);
-                } else {
-                    avgTargetsDisplay.textContent = '0';
-                }
-                populateFiringLaneInputs(); // Ensure lane inputs are generated (values are reset on selection)
-
-                // Update Penalties UI
-                timePenaltyInput.value = selectedSquad.part1Penalty;
-                targetPenaltyInput.value = selectedSquad.part2Penalty;
-
+            if (isCurrentSquadValidForPlatoon) {
+                squadSelect.value = currentSquadId; // Re-select if valid
             } else {
-                // Reset all UI elements if no squad is selected
-                timerDisplay.textContent = '00:00.00';
-                manualTimeInput.value = '';
-                numLanesInput.value = '1';
-                firingLaneInputs.innerHTML = '';
-                avgTargetsDisplay.textContent = '0';
-                timePenaltyInput.value = '0';
-                targetPenaltyInput.value = '0';
-                clearInterval(timerInterval);
-                startTimerBtn.disabled = false;
-                stopTimerBtn.disabled = true;
-                resetTimerBtn.disabled = true;
+                currentSquadId = null; // Reset if not valid for this platoon
+                squadSelect.value = ""; // Clear visual selection
             }
+
+            updateUIForSelectedSquad(); // Update UI based on the (potentially new/null) currentSquadId
         }
 
         platoonSelect.addEventListener('change', populateSquadsDropdown);
@@ -636,6 +589,7 @@
             const squad = squadsData.find(s => s.id === currentSquadId);
             if (squad) {
                 squad.part1Time = timeToSave;
+                squad.part1Penalty = parseFloat(timePenaltyInput.value) || 0; // Ensure penalty is applied on save
                 squad.part1ActualTime = squad.part1Time + squad.part1Penalty;
                 if (squad.status === 'Not Started') {
                     squad.status = 'Part 1 Complete';
@@ -708,6 +662,7 @@
                     return;
                 }
                 squad.part2Targets = currentAvgTargets;
+                squad.part2Penalty = parseFloat(targetPenaltyInput.value) || 0; // Ensure penalty is applied on save
                 squad.part2ActualTargets = squad.part2Targets - squad.part2Penalty;
                 if (squad.status === 'Part 1 Complete' || squad.status === 'Not Started') {
                     squad.status = 'Part 2 Complete';
@@ -869,7 +824,7 @@
                 .sort((a, b) => b.avgScore - a.avgScore);
 
             if (sortedPlatoons.length === 0) {
-                roadmapContent.innerHTML = '<p class="text-gray-400">Roadmap will appear here as squads complete their runs.</p>';
+                roadmapContent.innerHTML = '<p class="text-gray-400">No platoons initialized yet. Start by resetting data or waiting for data sync.</p>';
                 return;
             }
 
