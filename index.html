@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Black Knights BMS</title>
+    <title>Platoon Competition Manager</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -123,6 +123,39 @@
         .message-box.show {
             opacity: 1;
         }
+        .roadmap-platoon {
+            background-color: #f8fafc; /* gray-50 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border: 1px solid #e2e8f0; /* gray-200 */
+        }
+        .roadmap-squad-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px; /* full rounded */
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .status-not-started {
+            background-color: #cbd5e1; /* gray-300 */
+            color: #475569; /* gray-600 */
+        }
+        .status-part1-done {
+            background-color: #bfdbfe; /* blue-200 */
+            color: #1e40af; /* blue-800 */
+        }
+        .status-part2-done {
+            background-color: #a7f3d0; /* emerald-200 */
+            color: #065f46; /* emerald-800 */
+        }
+        .status-completed {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -131,6 +164,21 @@
 
         <!-- Message Box -->
         <div id="messageBox" class="message-box"></div>
+
+        <!-- Competition Roadmap -->
+        <div class="card">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Competition Roadmap</h2>
+            <div id="roadmapContainer">
+                <!-- Roadmap content will be populated by JS -->
+                <p class="text-gray-600">Loading roadmap...</p>
+            </div>
+            <div class="mt-6 text-center">
+                <button id="resetCompetitionBtn" class="btn btn-danger">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004 12m7-7h.582m7.418 0h.582m-6.418 0h.582m-6.418 0h.582m-6.418 0h.582M4 12a8.001 8.001 0 0015.356 2L20 10m-2.004 2.004L14.752 11.168A1 1 0 0110 13.82V10.18a1 1 0 011.555-.832l3.197 2.132a1 1 0 010 1.664z"></path></svg>
+                    Reset Competition
+                </button>
+            </div>
+        </div>
 
         <!-- Platoon and Squad Selection -->
         <div class="card">
@@ -246,36 +294,23 @@
         </div>
     </div>
 
-    <script>
-        // Data structure for the competition
-        const platoons = {
+    <script type="module">
+        // Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDocs, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+
+        // Data structure for the competition (initial state, will be overwritten by Firestore)
+        const platoonsConfig = {
             "Crusaders": ["Squad 1", "Squad 2", "Squad 3", "Squad 4"],
             "Samurai": ["Squad 1", "Squad 2", "Squad 3", "Squad 4"],
             "Goonies": ["Squad 1", "Squad 2", "Squad 3", "Squad 4"],
             "Nightalkers": ["Squad 1", "Squad 2", "Squad 3", "Squad 4"]
         };
 
-        // Global competition data state
-        const competitionData = {};
-
-        // Initialize competition data
-        for (const platoonName in platoons) {
-            competitionData[platoonName] = {
-                platoonName: platoonName,
-                squads: {},
-                platoonAverageScore: null // Will be calculated based on completed squads
-            };
-            platoons[platoonName].forEach(squadName => {
-                competitionData[platoonName].squads[squadName] = {
-                    part1Time: null, // Raw time from timer in seconds
-                    part2Targets: null, // Average targets hit
-                    penaltyTime: 0,
-                    penaltyTargets: 0,
-                    status: "not started", // 'not started', 'part1_done', 'part2_done', 'completed'
-                    finalScore: null // Calculated: (finalPart2Targets) / (finalPart1Time)
-                };
-            });
-        }
+        // Global competition data state (will be populated from Firestore)
+        let competitionData = {};
 
         // DOM Elements
         const platoonSelect = document.getElementById('platoonSelect');
@@ -295,6 +330,8 @@
         const applyPenaltiesBtn = document.getElementById('applyPenaltiesBtn');
         const scoreboardTableBody = document.querySelector('#scoreboardTable tbody');
         const messageBox = document.getElementById('messageBox');
+        const roadmapContainer = document.getElementById('roadmapContainer');
+        const resetCompetitionBtn = document.getElementById('resetCompetitionBtn');
 
         // Timer variables
         let timerInterval = null;
@@ -303,11 +340,57 @@
         let currentSelectedPlatoon = null;
         let currentSelectedSquad = null;
 
-        /**
-         * Displays a temporary message box with a given message and type.
-         * @param {string} message - The message to display.
-         * @param {string} type - 'success', 'error', 'info'.
-         */
+        // Firebase references
+        let db = null;
+        let auth = null;
+        let appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        let userId = null; // This will be the current user's ID
+        let isAuthReady = false; // Flag to indicate if auth is ready
+
+        // Initialize Firebase
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        try {
+            const firebaseApp = initializeApp(firebaseConfig);
+            db = getFirestore(firebaseApp);
+            auth = getAuth(firebaseApp);
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    console.log("Authenticated user:", userId);
+                } else {
+                    // Sign in anonymously if no user is present
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                            userId = auth.currentUser.uid;
+                            console.log("Signed in with custom token:", userId);
+                        } else {
+                            await signInAnonymously(auth);
+                            userId = auth.currentUser.uid;
+                            console.log("Signed in anonymously:", userId);
+                        }
+                    } catch (error) {
+                        console.error("Firebase authentication error:", error);
+                        // Fallback to a random ID if auth fails completely
+                        userId = crypto.randomUUID();
+                        console.warn("Using a random UUID as userId due to authentication failure.");
+                    }
+                }
+                isAuthReady = true;
+                // Once auth is ready, load competition data from Firestore
+                loadCompetitionDataFromFirestore();
+            });
+        } catch (e) {
+            console.error("Failed to initialize Firebase:", e);
+            // Fallback to local data if Firebase initialization fails
+            isAuthReady = true;
+            userId = crypto.randomUUID(); // Still generate a random ID for consistency
+            console.warn("Firebase initialization failed. The app will run without persistence.");
+        }
+
+
+        // Function to show messages
         function showMessage(message, type = 'info') {
             messageBox.textContent = message;
             messageBox.className = 'message-box show'; // Reset and show
@@ -325,11 +408,151 @@
         }
 
         /**
+         * Initializes the competition data in Firestore if it doesn't exist.
+         * This creates the initial structure for platoons and squads.
+         */
+        async function initializeFirestoreData() {
+            if (!db || !appId) {
+                console.error("Firestore or appId not initialized.");
+                return;
+            }
+
+            for (const platoonName in platoonsConfig) {
+                const platoonDocRef = doc(db, `artifacts/${appId}/public/data/platoons`, platoonName);
+                const platoonDocSnap = await getDoc(platoonDocRef);
+
+                if (!platoonDocSnap.exists()) {
+                    await setDoc(platoonDocRef, { platoonName: platoonName, platoonAverageScore: null });
+                }
+
+                for (const squadName of platoonsConfig[platoonName]) {
+                    const squadDocRef = doc(db, `artifacts/${appId}/public/data/platoons/${platoonName}/squads`, squadName);
+                    const squadDocSnap = await getDoc(squadDocRef);
+
+                    if (!squadDocSnap.exists()) {
+                        await setDoc(squadDocRef, {
+                            platoonName: platoonName,
+                            squadName: squadName,
+                            part1Time: null,
+                            part2Targets: null,
+                            penaltyTime: 0,
+                            penaltyTargets: 0,
+                            status: "not started",
+                            finalScore: null
+                        });
+                    }
+                }
+            }
+            console.log("Firestore data initialization complete.");
+        }
+
+        /**
+         * Loads competition data from Firestore and sets up real-time listeners.
+         */
+        async function loadCompetitionDataFromFirestore() {
+            if (!isAuthReady || !db || !userId) {
+                console.log("Auth not ready or Firebase not initialized. Retrying loadCompetitionDataFromFirestore...");
+                setTimeout(loadCompetitionDataFromFirestore, 500); // Retry after 500ms
+                return;
+            }
+
+            // Initialize data structure in Firestore if it's empty
+            await initializeFirestoreData();
+
+            // Set up real-time listener for platoons
+            onSnapshot(collection(db, `artifacts/${appId}/public/data/platoons`), (platoonSnapshot) => {
+                platoonSnapshot.docChanges().forEach(change => {
+                    const platoonData = change.doc.data();
+                    const platoonName = platoonData.platoonName;
+
+                    if (!competitionData[platoonName]) {
+                        competitionData[platoonName] = { squads: {} };
+                    }
+                    competitionData[platoonName].platoonAverageScore = platoonData.platoonAverageScore;
+
+                    // Set up real-time listener for squads within this platoon
+                    onSnapshot(collection(db, `artifacts/${appId}/public/data/platoons/${platoonName}/squads`), (squadSnapshot) => {
+                        squadSnapshot.docChanges().forEach(squadChange => {
+                            const squadData = squadChange.doc.data();
+                            const squadName = squadData.squadName;
+                            competitionData[platoonName].squads[squadName] = squadData;
+                        });
+                        // After all squad updates for a platoon, update UI
+                        updateUI();
+                    });
+                });
+                // Initial UI update after platoons are loaded
+                updateUI();
+            }, (error) => {
+                console.error("Error listening to platoons:", error);
+                showMessage("Failed to load competition data. Please check console.", "error");
+            });
+        }
+
+        /**
+         * Saves squad data to Firestore.
+         * @param {string} platoonName
+         * @param {string} squadName
+         */
+        async function saveSquadDataToFirestore(platoonName, squadName) {
+            if (!db || !appId) {
+                showMessage("Database not ready. Cannot save data.", "error");
+                return;
+            }
+            const squadData = competitionData[platoonName].squads[squadName];
+            try {
+                const docRef = doc(db, `artifacts/${appId}/public/data/platoons/${platoonName}/squads`, squadName);
+                await setDoc(docRef, squadData, { merge: true }); // Merge to update existing fields
+                console.log(`Squad data saved to Firestore: ${platoonName} - ${squadName}`);
+            } catch (e) {
+                console.error("Error saving document: ", e);
+                showMessage("Failed to save data to server. Please try again.", "error");
+            }
+        }
+
+        /**
+         * Resets all competition data in Firestore.
+         */
+        async function resetCompetition() {
+            if (!db || !appId) {
+                showMessage("Database not ready. Cannot reset data.", "error");
+                return;
+            }
+
+            if (!confirm("Are you sure you want to reset all competition data? This action cannot be undone.")) {
+                return;
+            }
+
+            try {
+                // Delete all squad documents
+                for (const platoonName in platoonsConfig) {
+                    const squadsColRef = collection(db, `artifacts/${appId}/public/data/platoons/${platoonName}/squads`);
+                    const squadDocs = await getDocs(squadsColRef);
+                    for (const sDoc of squadDocs.docs) {
+                        await deleteDoc(sDoc.ref);
+                    }
+                    // Delete platoon document itself
+                    const platoonDocRef = doc(db, `artifacts/${appId}/public/data/platoons`, platoonName);
+                    await deleteDoc(platoonDocRef);
+                }
+
+                // Re-initialize local and Firestore data to default state
+                competitionData = {}; // Clear local state
+                await initializeFirestoreData(); // Re-create initial structure in Firestore
+                showMessage("Competition data reset successfully!", "success");
+            } catch (e) {
+                console.error("Error resetting competition data:", e);
+                showMessage("Failed to reset competition data. Please check console.", "error");
+            }
+        }
+
+
+        /**
          * Populates the platoon select dropdown.
          */
         function populatePlatoonSelect() {
             platoonSelect.innerHTML = '<option value="">-- Select Platoon --</option>';
-            for (const platoonName in platoons) {
+            for (const platoonName in platoonsConfig) { // Use platoonsConfig for initial dropdown population
                 const option = document.createElement('option');
                 option.value = platoonName;
                 option.textContent = platoonName;
@@ -343,8 +566,8 @@
         function populateSquadSelect() {
             squadSelect.innerHTML = '<option value="">-- Select Squad --</option>';
             const selectedPlatoon = platoonSelect.value;
-            if (selectedPlatoon) {
-                platoons[selectedPlatoon].forEach(squadName => {
+            if (selectedPlatoon && platoonsConfig[selectedPlatoon]) { // Use platoonsConfig here too
+                platoonsConfig[selectedPlatoon].forEach(squadName => {
                     const option = document.createElement('option');
                     option.value = squadName;
                     option.textContent = squadName;
@@ -383,7 +606,7 @@
          * Loads the data of the currently selected squad into the UI elements.
          */
         function loadSquadDataForUI() {
-            if (!currentSelectedPlatoon || !currentSelectedSquad) return;
+            if (!currentSelectedPlatoon || !currentSelectedSquad || !competitionData[currentSelectedPlatoon] || !competitionData[currentSelectedPlatoon].squads[currentSelectedSquad]) return;
 
             const squadData = competitionData[currentSelectedPlatoon].squads[currentSelectedSquad];
 
@@ -473,7 +696,7 @@
         }
 
         /**
-         * Formats milliseconds into HH:MM:SS.ms format.
+         * Formats milliseconds into HH:MM:SS format.
          * @param {number} ms - Milliseconds to format.
          * @returns {string} Formatted time string.
          */
@@ -482,10 +705,9 @@
             const hours = Math.floor(totalSeconds / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
-            // const milliseconds = Math.floor((ms % 1000) / 100); // For .ms display
 
             const pad = (num) => num.toString().padStart(2, '0');
-            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`; // .${milliseconds}
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
         }
 
         /**
@@ -506,7 +728,7 @@
         /**
          * Saves the recorded Part 1 time for the current squad.
          */
-        function savePart1Time() {
+        async function savePart1Time() {
             if (!currentSelectedPlatoon || !currentSelectedSquad) {
                 showMessage("Please select a platoon and squad first.", "error");
                 return;
@@ -520,7 +742,7 @@
             squadData.part1Time = elapsedMilliseconds / 1000; // Store in seconds
             squadData.status = 'part1_done';
             savePart1Btn.disabled = true;
-            updateScoreboard();
+            await saveSquadDataToFirestore(currentSelectedPlatoon, currentSelectedSquad);
             showMessage(`Part 1 time saved for ${currentSelectedSquad}!`, "success");
         }
 
@@ -567,6 +789,7 @@
 
             let totalTargets = 0;
             let validInputs = 0;
+            let allInputsValid = true;
             laneInputs.forEach(input => {
                 const targets = parseInt(input.value);
                 if (!isNaN(targets) && targets >= 0 && targets <= 40) {
@@ -574,9 +797,15 @@
                     validInputs++;
                 } else {
                     showMessage(`Invalid input for lane: ${input.id}. Targets must be between 0 and 40.`, "error");
-                    return; // Stop calculation if any input is invalid
+                    allInputsValid = false;
                 }
             });
+
+            if (!allInputsValid) {
+                averageTargetsDisplay.textContent = 'N/A';
+                savePart2Btn.disabled = true;
+                return; // Stop if any input was invalid
+            }
 
             if (validInputs === 0) {
                 averageTargetsDisplay.textContent = 'N/A';
@@ -594,7 +823,7 @@
         /**
          * Saves the calculated Part 2 score for the current squad.
          */
-        function savePart2Score() {
+        async function savePart2Score() {
             if (!currentSelectedPlatoon || !currentSelectedSquad) {
                 showMessage("Please select a platoon and squad first.", "error");
                 return;
@@ -606,20 +835,20 @@
 
             const squadData = competitionData[currentSelectedPlatoon].squads[currentSelectedSquad];
             squadData.part2Targets = parseFloat(averageTargetsDisplay.textContent);
-            if (squadData.status === 'part1_done') {
+            if (squadData.part1Time !== null) { // Check if Part 1 is done
                 squadData.status = 'completed';
             } else {
                 squadData.status = 'part2_done'; // If part1 not done yet
             }
             savePart2Btn.disabled = true;
-            updateScoreboard();
+            await saveSquadDataToFirestore(currentSelectedPlatoon, currentSelectedSquad);
             showMessage(`Part 2 score saved for ${currentSelectedSquad}!`, "success");
         }
 
         /**
          * Applies penalties to the current squad.
          */
-        function applyPenalties() {
+        async function applyPenalties() {
             if (!currentSelectedPlatoon || !currentSelectedSquad) {
                 showMessage("Please select a platoon and squad first.", "error");
                 return;
@@ -641,20 +870,17 @@
             squadData.penaltyTime = timePenalty;
             squadData.penaltyTargets = targetPenalty;
 
-            updateScoreboard();
+            await saveSquadDataToFirestore(currentSelectedPlatoon, currentSelectedSquad);
             showMessage(`Penalties applied for ${currentSelectedSquad}!`, "success");
         }
 
         /**
          * Calculates the final score for a given squad.
          * Score = (Final Targets Hit) / (Final Time for Part 1)
-         * @param {string} platoonName
-         * @param {string} squadName
+         * @param {object} squadData - The squad data object.
          * @returns {number|string} The calculated score or 'N/A' if not complete.
          */
-        function calculateFinalScore(platoonName, squadName) {
-            const squadData = competitionData[platoonName].squads[squadName];
-
+        function calculateFinalScore(squadData) {
             const finalPart1Time = (squadData.part1Time !== null ? squadData.part1Time : 0) + squadData.penaltyTime;
             const finalPart2Targets = (squadData.part2Targets !== null ? squadData.part2Targets : 0) - squadData.penaltyTargets;
 
@@ -684,8 +910,8 @@
 
             // Sort squads by score (descending) for ranking, 'N/A' scores at the bottom
             allSquads.sort((a, b) => {
-                const scoreA = parseFloat(calculateFinalScore(a.platoonName, a.squadName));
-                const scoreB = parseFloat(calculateFinalScore(b.platoonName, b.squadName));
+                const scoreA = parseFloat(calculateFinalScore(a.data));
+                const scoreB = parseFloat(calculateFinalScore(b.data));
 
                 if (isNaN(scoreA) && isNaN(scoreB)) return 0; // Both N/A, keep original order
                 if (isNaN(scoreA)) return 1; // A is N/A, B is a number, A goes to bottom
@@ -704,14 +930,20 @@
                     let totalPlatoonScore = 0;
                     let completedSquadsInPlatoon = 0;
                     for (const sName in competitionData[platoonName].squads) {
-                        const score = parseFloat(calculateFinalScore(platoonName, sName));
+                        const score = parseFloat(calculateFinalScore(competitionData[platoonName].squads[sName]));
                         if (!isNaN(score)) {
                             totalPlatoonScore += score;
                             completedSquadsInPlatoon++;
                         }
                     }
                     const platoonAverage = completedSquadsInPlatoon > 0 ? (totalPlatoonScore / completedSquadsInPlatoon).toFixed(4) : 'N/A';
-                    competitionData[platoonName].platoonAverageScore = platoonAverage;
+
+                    // Update platoon average in Firestore
+                    if (db && appId) {
+                        const platoonDocRef = doc(db, `artifacts/${appId}/public/data/platoons`, platoonName);
+                        setDoc(platoonDocRef, { platoonAverageScore: platoonAverage }, { merge: true }).catch(e => console.error("Error updating platoon average:", e));
+                    }
+
 
                     platoonAvgRow.innerHTML = `
                         <td class="px-6 py-3 text-lg font-bold" colspan="8">${platoonName} Average Score:</td>
@@ -730,11 +962,55 @@
                     <td class="px-6 py-4 whitespace-nowrap">${data.penaltyTargets}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${(data.part1Time !== null ? (data.part1Time + data.penaltyTime).toFixed(2) : 'N/A')}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${(data.part2Targets !== null ? Math.max(0, data.part2Targets - data.penaltyTargets).toFixed(2) : 'N/A')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${calculateFinalScore(platoonName, squadName)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${calculateFinalScore(data)}</td>
                 `;
                 scoreboardTableBody.appendChild(row);
             }
         }
+
+        /**
+         * Updates the roadmap display.
+         */
+        function updateRoadmap() {
+            roadmapContainer.innerHTML = ''; // Clear existing roadmap
+
+            for (const platoonName in platoonsConfig) {
+                const platoonDiv = document.createElement('div');
+                platoonDiv.className = 'roadmap-platoon';
+
+                const platoonTitle = document.createElement('h3');
+                platoonTitle.className = 'text-xl font-semibold text-gray-800 mb-2';
+                platoonTitle.textContent = platoonName;
+                platoonDiv.appendChild(platoonTitle);
+
+                const squadStatusDiv = document.createElement('div');
+                squadStatusDiv.className = 'flex flex-wrap gap-2';
+
+                platoonsConfig[platoonName].forEach(squadName => {
+                    const squadData = competitionData[platoonName]?.squads[squadName] || { status: "not started" };
+                    const statusClass = `status-${squadData.status.replace(/_/g, '-')}`;
+
+                    const squadSpan = document.createElement('span');
+                    squadSpan.className = `roadmap-squad-status ${statusClass}`;
+                    squadSpan.textContent = `${squadName}: ${squadData.status.replace(/_/g, ' ')}`;
+                    squadStatusDiv.appendChild(squadSpan);
+                });
+                platoonDiv.appendChild(squadStatusDiv);
+                roadmapContainer.appendChild(platoonDiv);
+            }
+        }
+
+        /**
+         * Central function to update all UI components.
+         */
+        function updateUI() {
+            populatePlatoonSelect();
+            populateSquadSelect();
+            updateCurrentSquadDisplay();
+            updateScoreboard();
+            updateRoadmap();
+        }
+
 
         // Event Listeners
         platoonSelect.addEventListener('change', populateSquadSelect);
@@ -750,14 +1026,13 @@
         calculatePart2Btn.addEventListener('click', calculatePart2Score);
         savePart2Btn.addEventListener('click', savePart2Score);
         applyPenaltiesBtn.addEventListener('click', applyPenalties);
+        resetCompetitionBtn.addEventListener('click', resetCompetition);
 
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
-            populatePlatoonSelect();
-            populateSquadSelect(); // To initialize squad select and display
-            generateLaneScoreInputs(); // Generate initial lane inputs
-            updateScoreboard(); // Populate initial scoreboard
-            updateCurrentSquadDisplay(); // Set initial button states
+            // Firebase authentication and data loading is handled by the script in the head.
+            // The `updateUI` function will be called once data is loaded via `onSnapshot`.
+            // Initial UI setup will be handled by the Firestore listeners.
         });
     </script>
 </body>
