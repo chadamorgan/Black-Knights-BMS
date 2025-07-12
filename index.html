@@ -3,550 +3,762 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Platoon Competition Scoreboard</title>
+    <title>Platoon Competition Manager</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary-bg: #2c3e50;
-            --secondary-bg: #34495e;
-            --accent-color: #e74c3c;
-            --text-color: #ecf0f1;
-            --border-color: #34495e;
-            --button-hover: #c0392b;
-            --input-bg: #4a6572;
-            --input-text: #ecf0f1;
-        }
-
+        /* Custom styles for better aesthetics and responsiveness */
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: var(--primary-bg);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
         }
-
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background-color: var(--secondary-bg);
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            padding: 1.5rem;
         }
-
-        h1, h2, h3 {
-            color: var(--accent-color);
-            text-align: center;
-            margin-bottom: 25px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }
-
-        .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
-            border-radius: 6px;
-            margin-bottom: 25px;
-            border: 1px solid var(--border-color);
-            box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        select, input[type="number"], input[type="text"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background-color: var(--input-bg);
-            color: var(--input-text);
-            font-size: 1em;
-            transition: border-color 0.3s ease;
-        }
-
-        select:focus, input[type="number"]:focus, input[type="text"]:focus {
-            border-color: var(--accent-color);
-            outline: none;
-        }
-
-        button {
-            background-color: var(--accent-color);
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            font-weight: 600; /* font-semibold */
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
             cursor: pointer;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
-
-        button:hover {
-            background-color: var(--button-hover);
-            transform: translateY(-2px);
+        .btn-primary {
+            background-color: #4f46e5; /* indigo-600 */
+            color: #ffffff;
         }
-
-        button:active {
-            transform: translateY(0);
+        .btn-primary:hover {
+            background-color: #4338ca; /* indigo-700 */
+            transform: translateY(-1px);
         }
-
-        .timer-display {
-            font-size: 3em;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: var(--input-bg);
-            border-radius: 5px;
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
+        .btn-secondary {
+            background-color: #6b7280; /* gray-500 */
+            color: #ffffff;
         }
-
-        #firingLanesContainer input {
-            margin-bottom: 10px;
+        .btn-secondary:hover {
+            background-color: #4b5563; /* gray-600 */
+            transform: translateY(-1px);
         }
-
-        .scoreboard-container {
-            margin-top: 30px;
+        .btn-danger {
+            background-color: #ef4444; /* red-500 */
+            color: #ffffff;
         }
-
+        .btn-danger:hover {
+            background-color: #dc2626; /* red-600 */
+            transform: translateY(-1px);
+        }
+        input[type="number"],
+        select {
+            padding: 0.625rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db; /* gray-300 */
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #f9fafb; /* gray-50 */
+        }
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #6366f1; /* indigo-500 */
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 1rem;
         }
-
         th, td {
-            border: 1px solid var(--border-color);
-            padding: 10px;
+            padding: 0.75rem 1rem;
             text-align: left;
+            border-bottom: 1px solid #e5e7eb; /* gray-200 */
         }
-
         th {
-            background-color: var(--accent-color);
-            color: white;
+            background-color: #f3f4f6; /* gray-100 */
+            font-weight: 600;
+            color: #4b5563;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .grid-cols-1-md-2 {
+            grid-template-columns: 1fr;
+        }
+        @media (min-width: 768px) {
+            .grid-cols-1-md-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .platoon-score-row {
             font-weight: bold;
+            background-color: #e0e7ff; /* indigo-100 */
+            color: #312e81; /* indigo-900 */
         }
-
-        tr:nth-child(even) {
-            background-color: var(--input-bg);
-        }
-
-        tr:hover {
-            background-color: #4a6572;
-        }
-
-        .message {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #27ae60;
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50; /* Green */
             color: white;
-            border-radius: 5px;
-            text-align: center;
-            display: none; /* Hidden by default */
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
         }
-
-        .error {
-            background-color: #e74c3c;
+        .message-box.show {
+            opacity: 1;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Platoon Competition Scoreboard</h1>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <div class="container py-8">
+        <h1 class="text-4xl font-extrabold text-center text-indigo-800 mb-8">Black Knights BMS</h1>
 
-        <div class="section">
-            <h2>Select Platoon and Squad</h2>
-            <div class="form-group">
-                <label for="platoonSelect">Platoon:</label>
-                <select id="platoonSelect">
-                    <option value="">-- Select Platoon --</option>
-                    <option value="Crusaders">Platoon 1 - Crusaders</option>
-                    <option value="Samurai">Platoon 2 - Samurai</option>
-                    <option value="Goonies">Platoon 3 - Goonies</option>
-                    <option value="Nightalkers">Platoon 4 - Nightalkers</option>
-                </select>
+        <!-- Message Box -->
+        <div id="messageBox" class="message-box"></div>
+
+        <!-- Platoon and Squad Selection -->
+        <div class="card">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Select Current Squad</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="platoonSelect" class="block text-sm font-medium text-gray-700 mb-1">Platoon:</label>
+                    <select id="platoonSelect" class="mt-1 block w-full">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div>
+                    <label for="squadSelect" class="block text-sm font-medium text-gray-700 mb-1">Squad:</label>
+                    <select id="squadSelect" class="mt-1 block w-full">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="squadSelect">Squad:</label>
-                <select id="squadSelect">
-                    <option value="">-- Select Squad --</option>
-                    <option value="Squad 1">Squad 1</option>
-                    <option value="Squad 2">Squad 2</option>
-                    <option value="Squad 3">Squad 3</option>
-                    <option value="Squad 4">Squad 4</option>
-                </select>
+            <div class="mt-6">
+                <p class="text-lg font-semibold text-gray-700">Currently Managing: <span id="currentSquadDisplay" class="text-indigo-600">None Selected</span></p>
             </div>
-            <button onclick="setCurrentSquad()">Set Current Squad</button>
-            <p><strong>Current Squad Scoring:</strong> <span id="currentSquadDisplay">None Selected</span></p>
         </div>
 
-        <div class="section">
-            <h2>Part 1: Equipment Move Timer</h2>
-            <p>Track the time for the equipment move. The time recorded here will be used in the final score calculation.</p>
-            <div class="timer-display" id="timerDisplay">00:00.00</div>
-            <button onclick="startTimer()">Start Timer</button>
-            <button onclick="stopTimer()">Stop Timer</button>
-            <button onclick="resetTimer()">Reset Timer</button>
-            <p>Recorded Time: <span id="recordedTime">00:00.00</span></p>
+        <!-- Part 1: Equipment Move (Timed) -->
+        <div class="card">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Part 1: Equipment Move</h2>
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-6">
+                <div class="text-4xl font-mono font-bold text-gray-900 bg-gray-50 p-4 rounded-lg shadow-inner w-full md:w-auto text-center">
+                    <span id="timerDisplay">00:00:00</span>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full md:w-auto">
+                    <button id="startTimerBtn" class="btn btn-primary w-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197 2.132A1 1 0 0110 13.82V10.18a1 1 0 011.555-.832l3.197 2.132a1 1 0 010 1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Start Timer
+                    </button>
+                    <button id="stopTimerBtn" class="btn btn-secondary w-full" disabled>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Stop Timer
+                    </button>
+                </div>
+            </div>
+            <button id="savePart1Btn" class="btn btn-primary w-full mt-4" disabled>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Save Part 1 Time
+            </button>
         </div>
 
-        <div class="section">
-            <h2>Part 2: Firing Range Scoring</h2>
-            <p>Enter the average targets hit for each firing lane. Each squad member fires at 40 targets.</p>
-            <div class="form-group">
-                <label for="numLanes">Number of Firing Lanes:</label>
-                <input type="number" id="numLanes" min="1" value="1" onchange="generateFiringLaneInputs()">
+        <!-- Part 2: Firing Range -->
+        <div class="card">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Part 2: Firing Range</h2>
+            <div class="mb-4">
+                <label for="numLanes" class="block text-sm font-medium text-gray-700 mb-1">Number of Firing Lanes:</label>
+                <input type="number" id="numLanes" min="1" value="1" class="mt-1 block w-full">
             </div>
-            <div id="firingLanesContainer">
-                <label for="lane1Score">Lane 1 - Targets Hit (Avg):</label>
-                <input type="number" id="lane1Score" min="0" max="40" value="0">
+            <div id="laneScoresContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Lane score inputs will be generated here -->
             </div>
-            <button onclick="calculateFiringRangeScore()">Calculate Firing Range Score</button>
-            <p>Total Average Targets Hit: <span id="firingRangeScoreDisplay">0</span></p>
+            <p class="text-lg font-semibold text-gray-700 mb-4">Average Targets Hit: <span id="averageTargetsDisplay" class="text-indigo-600">N/A</span></p>
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <button id="calculatePart2Btn" class="btn btn-secondary w-full">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M12 17h.01M7 17h.01M6 10h2m5-1a1 1 0 11-2 0 1 1 0 012 0zm3 0a1 1 0 11-2 0 1 1 0 012 0zM6 7h.01M6 13h.01L12 10l-6-3z"></path></svg>
+                    Calculate Average
+                </button>
+                <button id="savePart2Btn" class="btn btn-primary w-full" disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Save Part 2 Score
+                </button>
+            </div>
         </div>
 
-        <div class="section">
-            <h2>Penalties</h2>
-            <p>Add time to Part 1 or remove target hits from Part 2.</p>
-            <div class="form-group">
-                <label for="timePenalty">Time Penalty (seconds):</label>
-                <input type="number" id="timePenalty" value="0" min="0">
+        <!-- Penalties -->
+        <div class="card">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Apply Penalties</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="penaltyTime" class="block text-sm font-medium text-gray-700 mb-1">Time Penalty (seconds):</label>
+                    <input type="number" id="penaltyTime" min="0" value="0" class="mt-1 block w-full">
+                </div>
+                <div>
+                    <label for="penaltyTargets" class="block text-sm font-medium text-gray-700 mb-1">Target Penalty (targets):</label>
+                    <input type="number" id="penaltyTargets" min="0" value="0" class="mt-1 block w-full">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="targetPenalty">Target Hits Penalty:</label>
-                <input type="number" id="targetPenalty" value="0" min="0">
-            </div>
-            <button onclick="applyPenalties()">Apply Penalties</button>
+            <button id="applyPenaltiesBtn" class="btn btn-danger w-full">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                Apply Penalties
+            </button>
         </div>
 
-        <div class="section">
-            <h2>Finalize Squad Score</h2>
-            <p>Once both parts are complete and penalties applied, finalize the score for the current squad.</p>
-            <button onclick="submitSquadScore()">Submit Squad Score</button>
-            <div class="message" id="successMessage"></div>
-        </div>
-
-        <div class="scoreboard-container section">
-            <h2>Live Scoreboard</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Platoon</th>
-                        <th>Squad</th>
-                        <th>Equipment Move Time (s)</th>
-                        <th>Targets Hit</th>
-                        <th>Raw Score (T/T)</th>
-                        <th>Adjusted Time (s)</th>
-                        <th>Adjusted Targets Hit</th>
-                        <th>Final Score (Adjusted T/T)</th>
-                    </tr>
-                </thead>
-                <tbody id="scoreboardBody">
+        <!-- Scoreboard -->
+        <div class="card">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Live Scoreboard</h2>
+            <div class="overflow-x-auto">
+                <table id="scoreboardTable" class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Platoon</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Squad</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part 1 Time (s)</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part 2 Targets</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Penalty (s)</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target Penalty</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Final Time (s)</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Final Targets</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Scoreboard rows will be populated by JS -->
                     </tbody>
-            </table>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        // Data storage for scores
-        let competitionData = JSON.parse(localStorage.getItem('competitionData')) || {};
-        const PLATOONS = ["Crusaders", "Samurai", "Goonies", "Nightalkers"];
-        const NUM_SQUADS = 4; // Each platoon has 4 squads
+        // Data structure for the competition
+        const platoons = {
+            "Crusaders": ["Squad 1", "Squad 2", "Squad 3", "Squad 4"],
+            "Samurai": ["Squad 1", "Squad 2", "Squad 3", "Squad 4"],
+            "Goonies": ["Squad 1", "Squad 2", "Squad 3", "Squad 4"],
+            "Nightalkers": ["Squad 1", "Squad 2", "Squad 3", "Squad 4"]
+        };
 
-        // Initialize competitionData if empty
-        PLATOONS.forEach(platoon => {
-            if (!competitionData[platoon]) {
-                competitionData[platoon] = {};
-                for (let i = 1; i <= NUM_SQUADS; i++) {
-                    competitionData[platoon][`Squad ${i}`] = {
-                        equipmentTime: 0,
-                        targetsHit: 0,
-                        penalties: { time: 0, targets: 0 },
-                        finalScore: 0
-                    };
-                }
-            }
-        });
+        // Global competition data state
+        const competitionData = {};
 
-        let currentPlatoon = '';
-        let currentSquad = '';
-        let timerInterval;
-        let startTime;
-        let elapsedTime = 0;
-        let recordedTimeSeconds = 0;
-        let firingRangeScore = 0;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            updateScoreboard();
-            const currentSquadDisplay = document.getElementById('currentSquadDisplay');
-            if (currentPlatoon && currentSquad) {
-                currentSquadDisplay.textContent = `${currentPlatoon} - ${currentSquad}`;
-            } else {
-                currentSquadDisplay.textContent = "None Selected";
-            }
-            generateFiringLaneInputs(); // Generate initial lane input
-        });
-
-        function setCurrentSquad() {
-            const platoonSelect = document.getElementById('platoonSelect');
-            const squadSelect = document.getElementById('squadSelect');
-
-            if (platoonSelect.value === "" || squadSelect.value === "") {
-                showMessage("Please select both a Platoon and a Squad.", "error");
-                return;
-            }
-
-            currentPlatoon = platoonSelect.value;
-            currentSquad = squadSelect.value;
-            document.getElementById('currentSquadDisplay').textContent = `${currentPlatoon} - ${currentSquad}`;
-            showMessage(`Scoring set for: ${currentPlatoon} - ${currentSquad}`, "success");
-            resetTimer(); // Reset timer for new squad
-            document.getElementById('numLanes').value = 1;
-            generateFiringLaneInputs();
-            document.getElementById('timePenalty').value = 0;
-            document.getElementById('targetPenalty').value = 0;
-            firingRangeScore = 0;
-            document.getElementById('firingRangeScoreDisplay').textContent = 0;
-        }
-
-        function startTimer() {
-            if (!currentPlatoon || !currentSquad) {
-                showMessage("Please select a Platoon and Squad first!", "error");
-                return;
-            }
-            if (!timerInterval) {
-                startTime = Date.now() - elapsedTime;
-                timerInterval = setInterval(updateTimer, 10);
-            }
-        }
-
-        function stopTimer() {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            recordedTimeSeconds = elapsedTime / 1000;
-            document.getElementById('recordedTime').textContent = formatTime(elapsedTime);
-        }
-
-        function resetTimer() {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            elapsedTime = 0;
-            recordedTimeSeconds = 0;
-            document.getElementById('timerDisplay').textContent = "00:00.00";
-            document.getElementById('recordedTime').textContent = "00:00.00";
-        }
-
-        function updateTimer() {
-            elapsedTime = Date.now() - startTime;
-            document.getElementById('timerDisplay').textContent = formatTime(elapsedTime);
-        }
-
-        function formatTime(ms) {
-            const minutes = Math.floor(ms / 60000);
-            const seconds = Math.floor((ms % 60000) / 1000);
-            const milliseconds = Math.floor((ms % 1000) / 10);
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
-        }
-
-        function generateFiringLaneInputs() {
-            const numLanes = parseInt(document.getElementById('numLanes').value);
-            const container = document.getElementById('firingLanesContainer');
-            container.innerHTML = ''; // Clear previous inputs
-
-            for (let i = 1; i <= numLanes; i++) {
-                const label = document.createElement('label');
-                label.htmlFor = `lane${i}Score`;
-                label.textContent = `Lane ${i} - Targets Hit (Avg):`;
-                container.appendChild(label);
-
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.id = `lane${i}Score`;
-                input.min = '0';
-                input.max = '40';
-                input.value = '0';
-                container.appendChild(input);
-            }
-        }
-
-        function calculateFiringRangeScore() {
-            const numLanes = parseInt(document.getElementById('numLanes').value);
-            let totalTargetsHit = 0;
-            let validLanes = 0;
-
-            for (let i = 1; i <= numLanes; i++) {
-                const input = document.getElementById(`lane${i}Score`);
-                if (input) {
-                    const score = parseFloat(input.value);
-                    if (!isNaN(score) && score >= 0 && score <= 40) {
-                        totalTargetsHit += score;
-                        validLanes++;
-                    } else {
-                        showMessage(`Invalid score entered for Lane ${i}. Please enter a number between 0 and 40.`, "error");
-                        return; // Stop calculation if any invalid score is found
-                    }
-                }
-            }
-
-            if (validLanes > 0) {
-                firingRangeScore = totalTargetsHit / validLanes;
-            } else {
-                firingRangeScore = 0;
-            }
-            document.getElementById('firingRangeScoreDisplay').textContent = firingRangeScore.toFixed(2);
-            showMessage("Firing Range Score Calculated!", "success");
-        }
-
-        function applyPenalties() {
-            const timePenalty = parseFloat(document.getElementById('timePenalty').value);
-            const targetPenalty = parseFloat(document.getElementById('targetPenalty').value);
-
-            if (currentPlatoon && currentSquad) {
-                competitionData[currentPlatoon][currentSquad].penalties.time = timePenalty;
-                competitionData[currentPlatoon][currentSquad].penalties.targets = targetPenalty;
-                showMessage(`Penalties applied for ${currentPlatoon} - ${currentSquad}.`, "success");
-            } else {
-                showMessage("Please select a Platoon and Squad first!", "error");
-            }
-        }
-
-        function submitSquadScore() {
-            if (!currentPlatoon || !currentSquad) {
-                showMessage("Please select a Platoon and Squad first!", "error");
-                return;
-            }
-
-            if (recordedTimeSeconds === 0) {
-                showMessage("Please record the Equipment Move time before submitting!", "error");
-                return;
-            }
-
-            if (firingRangeScore === 0 && parseInt(document.getElementById('numLanes').value) > 0) { // Check if lanes were intended to be scored
-                 showMessage("Please calculate the Firing Range Score before submitting!", "error");
-                 return;
-            }
-
-
-            const squadData = competitionData[currentPlatoon][currentSquad];
-
-            // Apply penalties for submission
-            const adjustedTime = recordedTimeSeconds + squadData.penalties.time;
-            const adjustedTargets = Math.max(0, firingRangeScore - squadData.penalties.targets); // Targets cannot go below 0
-
-            squadData.equipmentTime = recordedTimeSeconds; // Store raw time
-            squadData.targetsHit = firingRangeScore; // Store raw targets
-            squadData.adjustedEquipmentTime = adjustedTime; // Store adjusted time
-            squadData.adjustedTargetsHit = adjustedTargets; // Store adjusted targets
-
-            // Calculate final score: Adjusted Targets Hit / Adjusted Time
-            squadData.finalScore = adjustedTime > 0 ? (adjustedTargets / adjustedTime) : 0;
-
-            localStorage.setItem('competitionData', JSON.stringify(competitionData));
-            updateScoreboard();
-            showMessage(`Score submitted for ${currentPlatoon} - ${currentSquad}!`, "success");
-
-            // Reset inputs for next entry
-            resetTimer();
-            document.getElementById('numLanes').value = 1;
-            generateFiringLaneInputs();
-            document.getElementById('timePenalty').value = 0;
-            document.getElementById('targetPenalty').value = 0;
-            firingRangeScore = 0;
-            document.getElementById('firingRangeScoreDisplay').textContent = 0;
-            document.getElementById('platoonSelect').value = "";
-            document.getElementById('squadSelect').value = "";
-            currentPlatoon = '';
-            currentSquad = '';
-            document.getElementById('currentSquadDisplay').textContent = "None Selected";
-        }
-
-        function updateScoreboard() {
-            const scoreboardBody = document.getElementById('scoreboardBody');
-            scoreboardBody.innerHTML = ''; // Clear existing rows
-
-            let platoonScores = {};
-
-            PLATOONS.forEach(platoon => {
-                let totalPlatoonAdjustedTime = 0;
-                let totalPlatoonAdjustedTargets = 0;
-                let squadsCounted = 0;
-
-                for (let i = 1; i <= NUM_SQUADS; i++) {
-                    const squadName = `Squad ${i}`;
-                    const squadData = competitionData[platoon][squadName];
-
-                    const row = scoreboardBody.insertRow();
-                    row.insertCell().textContent = platoon;
-                    row.insertCell().textContent = squadName;
-                    row.insertCell().textContent = squadData.equipmentTime.toFixed(2);
-                    row.insertCell().textContent = squadData.targetsHit.toFixed(2);
-                    row.insertCell().textContent = (squadData.equipmentTime > 0 ? (squadData.targetsHit / squadData.equipmentTime).toFixed(4) : "0.0000"); // Raw Score
-
-                    // Adjusted values for display
-                    const displayAdjustedTime = (squadData.adjustedEquipmentTime !== undefined) ? squadData.adjustedEquipmentTime.toFixed(2) : 'N/A';
-                    const displayAdjustedTargets = (squadData.adjustedTargetsHit !== undefined) ? squadData.adjustedTargetsHit.toFixed(2) : 'N/A';
-                    const displayFinalScore = (squadData.finalScore !== undefined) ? squadData.finalScore.toFixed(4) : 'N/A';
-
-                    row.insertCell().textContent = displayAdjustedTime;
-                    row.insertCell().textContent = displayAdjustedTargets;
-                    row.insertCell().textContent = displayFinalScore;
-
-                    // Aggregate for platoon average
-                    if (squadData.adjustedEquipmentTime !== undefined && squadData.adjustedTargetsHit !== undefined) {
-                        totalPlatoonAdjustedTime += squadData.adjustedEquipmentTime;
-                        totalPlatoonAdjustedTargets += squadData.adjustedTargetsHit;
-                        squadsCounted++;
-                    }
-                }
-
-                // Add platoon average row
-                if (squadsCounted > 0) {
-                    const platoonAvgScore = totalPlatoonAdjustedTime > 0 ? (totalPlatoonAdjustedTargets / totalPlatoonAdjustedTime) : 0;
-                    platoonScores[platoon] = platoonAvgScore;
-
-                    const avgRow = scoreboardBody.insertRow();
-                    avgRow.style.fontWeight = 'bold';
-                    avgRow.style.backgroundColor = '#4CAF50'; /* Green for averages */
-                    avgRow.style.color = 'white';
-                    avgRow.insertCell().textContent = platoon;
-                    avgRow.insertCell().textContent = 'PLATOON AVERAGE';
-                    avgRow.insertCell().colSpan = 5; // Span across score columns
-                    avgRow.insertCell().textContent = platoonAvgScore.toFixed(4);
-                } else {
-                     platoonScores[platoon] = 0; // If no squads submitted, avg is 0
-                }
-            });
-
-            // Sort platoons by final average score for overall ranking
-            const sortedPlatoons = Object.entries(platoonScores).sort(([, scoreA], [, scoreB]) => scoreB - scoreA);
-
-            // Optional: Display overall platoon ranking (can be a separate section or within the scoreboard)
-            // For simplicity, let's just add a console log for now, but you could build a separate ranking table.
-            console.log("Overall Platoon Ranking:");
-            sortedPlatoons.forEach(([platoon, score], index) => {
-                console.log(`${index + 1}. ${platoon}: ${score.toFixed(4)}`);
+        // Initialize competition data
+        for (const platoonName in platoons) {
+            competitionData[platoonName] = {
+                platoonName: platoonName,
+                squads: {},
+                platoonAverageScore: null // Will be calculated based on completed squads
+            };
+            platoons[platoonName].forEach(squadName => {
+                competitionData[platoonName].squads[squadName] = {
+                    part1Time: null, // Raw time from timer in seconds
+                    part2Targets: null, // Average targets hit
+                    penaltyTime: 0,
+                    penaltyTargets: 0,
+                    status: "not started", // 'not started', 'part1_done', 'part2_done', 'completed'
+                    finalScore: null // Calculated: (finalPart2Targets) / (finalPart1Time)
+                };
             });
         }
 
-        function showMessage(message, type = "success") {
-            const msgElement = document.getElementById('successMessage');
-            msgElement.textContent = message;
-            msgElement.className = 'message'; // Reset classes
-            msgElement.classList.add(type);
-            msgElement.style.display = 'block';
+        // DOM Elements
+        const platoonSelect = document.getElementById('platoonSelect');
+        const squadSelect = document.getElementById('squadSelect');
+        const currentSquadDisplay = document.getElementById('currentSquadDisplay');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startTimerBtn = document.getElementById('startTimerBtn');
+        const stopTimerBtn = document.getElementById('stopTimerBtn');
+        const savePart1Btn = document.getElementById('savePart1Btn');
+        const numLanesInput = document.getElementById('numLanes');
+        const laneScoresContainer = document.getElementById('laneScoresContainer');
+        const averageTargetsDisplay = document.getElementById('averageTargetsDisplay');
+        const calculatePart2Btn = document.getElementById('calculatePart2Btn');
+        const savePart2Btn = document.getElementById('savePart2Btn');
+        const penaltyTimeInput = document.getElementById('penaltyTime');
+        const penaltyTargetsInput = document.getElementById('penaltyTargets');
+        const applyPenaltiesBtn = document.getElementById('applyPenaltiesBtn');
+        const scoreboardTableBody = document.querySelector('#scoreboardTable tbody');
+        const messageBox = document.getElementById('messageBox');
+
+        // Timer variables
+        let timerInterval = null;
+        let startTime = 0;
+        let elapsedMilliseconds = 0;
+        let currentSelectedPlatoon = null;
+        let currentSelectedSquad = null;
+
+        /**
+         * Displays a temporary message box with a given message and type.
+         * @param {string} message - The message to display.
+         * @param {string} type - 'success', 'error', 'info'.
+         */
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.className = 'message-box show'; // Reset and show
+            if (type === 'success') {
+                messageBox.style.backgroundColor = '#4CAF50'; // Green
+            } else if (type === 'error') {
+                messageBox.style.backgroundColor = '#f44336'; // Red
+            } else {
+                messageBox.style.backgroundColor = '#2196F3'; // Blue
+            }
 
             setTimeout(() => {
-                msgElement.style.display = 'none';
+                messageBox.classList.remove('show');
             }, 3000); // Hide after 3 seconds
         }
+
+        /**
+         * Populates the platoon select dropdown.
+         */
+        function populatePlatoonSelect() {
+            platoonSelect.innerHTML = '<option value="">-- Select Platoon --</option>';
+            for (const platoonName in platoons) {
+                const option = document.createElement('option');
+                option.value = platoonName;
+                option.textContent = platoonName;
+                platoonSelect.appendChild(option);
+            }
+        }
+
+        /**
+         * Populates the squad select dropdown based on the selected platoon.
+         */
+        function populateSquadSelect() {
+            squadSelect.innerHTML = '<option value="">-- Select Squad --</option>';
+            const selectedPlatoon = platoonSelect.value;
+            if (selectedPlatoon) {
+                platoons[selectedPlatoon].forEach(squadName => {
+                    const option = document.createElement('option');
+                    option.value = squadName;
+                    option.textContent = squadName;
+                    squadSelect.appendChild(option);
+                });
+            }
+            // Reset current squad selection if platoon changes
+            currentSelectedSquad = null;
+            updateCurrentSquadDisplay();
+            resetPart1UI();
+            resetPart2UI();
+            resetPenaltiesUI();
+        }
+
+        /**
+         * Updates the display for the currently selected squad.
+         */
+        function updateCurrentSquadDisplay() {
+            if (currentSelectedPlatoon && currentSelectedSquad) {
+                currentSquadDisplay.textContent = `${currentSelectedPlatoon} - ${currentSelectedSquad}`;
+                // Load existing data for the selected squad into UI
+                loadSquadDataForUI();
+            } else {
+                currentSquadDisplay.textContent = 'None Selected';
+            }
+            // Disable buttons if no squad is selected
+            const isSquadSelected = currentSelectedPlatoon && currentSelectedSquad;
+            startTimerBtn.disabled = !isSquadSelected;
+            savePart1Btn.disabled = !isSquadSelected;
+            calculatePart2Btn.disabled = !isSquadSelected;
+            savePart2Btn.disabled = !isSquadSelected;
+            applyPenaltiesBtn.disabled = !isSquadSelected;
+        }
+
+        /**
+         * Loads the data of the currently selected squad into the UI elements.
+         */
+        function loadSquadDataForUI() {
+            if (!currentSelectedPlatoon || !currentSelectedSquad) return;
+
+            const squadData = competitionData[currentSelectedPlatoon].squads[currentSelectedSquad];
+
+            // Part 1 UI
+            if (squadData.part1Time !== null) {
+                timerDisplay.textContent = formatTime(squadData.part1Time * 1000);
+                savePart1Btn.disabled = true; // Already saved
+                startTimerBtn.disabled = true; // Cannot start again
+                stopTimerBtn.disabled = true; // Cannot stop if not running
+            } else {
+                resetPart1UI();
+            }
+
+            // Part 2 UI (Note: Lane scores are not stored, only the average)
+            if (squadData.part2Targets !== null) {
+                averageTargetsDisplay.textContent = squadData.part2Targets.toFixed(2);
+                savePart2Btn.disabled = true; // Already saved
+            } else {
+                averageTargetsDisplay.textContent = 'N/A';
+                savePart2Btn.disabled = false; // Can save
+            }
+            generateLaneScoreInputs(); // Always generate inputs based on numLanes, even if data exists
+
+            // Penalties UI
+            penaltyTimeInput.value = squadData.penaltyTime;
+            penaltyTargetsInput.value = squadData.penaltyTargets;
+        }
+
+        /**
+         * Resets Part 1 UI elements to their initial state.
+         */
+        function resetPart1UI() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            startTime = 0;
+            elapsedMilliseconds = 0;
+            timerDisplay.textContent = '00:00:00';
+            startTimerBtn.disabled = false;
+            stopTimerBtn.disabled = true;
+            savePart1Btn.disabled = true;
+        }
+
+        /**
+         * Resets Part 2 UI elements to their initial state.
+         */
+        function resetPart2UI() {
+            averageTargetsDisplay.textContent = 'N/A';
+            savePart2Btn.disabled = true;
+            laneScoresContainer.innerHTML = ''; // Clear lane inputs
+            numLanesInput.value = 1; // Reset to default 1 lane
+            generateLaneScoreInputs(); // Regenerate for 1 lane
+        }
+
+        /**
+         * Resets Penalties UI elements to their initial state.
+         */
+        function resetPenaltiesUI() {
+            penaltyTimeInput.value = 0;
+            penaltyTargetsInput.value = 0;
+        }
+
+        /**
+         * Starts the timer for Part 1.
+         */
+        function startTimer() {
+            if (!currentSelectedPlatoon || !currentSelectedSquad) {
+                showMessage("Please select a platoon and squad first.", "error");
+                return;
+            }
+            if (timerInterval) return; // Timer already running
+
+            startTime = Date.now() - elapsedMilliseconds; // Resume from where it left off, or 0
+            timerInterval = setInterval(updateTimer, 100); // Update every 100ms for smoother display
+
+            startTimerBtn.disabled = true;
+            stopTimerBtn.disabled = false;
+            savePart1Btn.disabled = true; // Can't save while timer is running
+            showMessage("Timer started!", "success");
+        }
+
+        /**
+         * Updates the timer display.
+         */
+        function updateTimer() {
+            elapsedMilliseconds = Date.now() - startTime;
+            timerDisplay.textContent = formatTime(elapsedMilliseconds);
+        }
+
+        /**
+         * Formats milliseconds into HH:MM:SS.ms format.
+         * @param {number} ms - Milliseconds to format.
+         * @returns {string} Formatted time string.
+         */
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            // const milliseconds = Math.floor((ms % 1000) / 100); // For .ms display
+
+            const pad = (num) => num.toString().padStart(2, '0');
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`; // .${milliseconds}
+        }
+
+        /**
+         * Stops the timer and enables saving the time.
+         */
+        function stopTimer() {
+            if (!timerInterval) return; // Timer not running
+
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            startTimerBtn.disabled = false;
+            stopTimerBtn.disabled = true;
+            savePart1Btn.disabled = false;
+            showMessage("Timer stopped. Save the time.", "info");
+        }
+
+        /**
+         * Saves the recorded Part 1 time for the current squad.
+         */
+        function savePart1Time() {
+            if (!currentSelectedPlatoon || !currentSelectedSquad) {
+                showMessage("Please select a platoon and squad first.", "error");
+                return;
+            }
+            if (timerInterval) {
+                showMessage("Please stop the timer before saving.", "error");
+                return;
+            }
+
+            const squadData = competitionData[currentSelectedPlatoon].squads[currentSelectedSquad];
+            squadData.part1Time = elapsedMilliseconds / 1000; // Store in seconds
+            squadData.status = 'part1_done';
+            savePart1Btn.disabled = true;
+            updateScoreboard();
+            showMessage(`Part 1 time saved for ${currentSelectedSquad}!`, "success");
+        }
+
+        /**
+         * Generates input fields for firing lane scores based on the number of lanes.
+         */
+        function generateLaneScoreInputs() {
+            const numLanes = parseInt(numLanesInput.value);
+            laneScoresContainer.innerHTML = ''; // Clear previous inputs
+
+            if (isNaN(numLanes) || numLanes < 1) {
+                showMessage("Number of lanes must be at least 1.", "error");
+                numLanesInput.value = 1; // Reset to 1
+                return;
+            }
+
+            for (let i = 0; i < numLanes; i++) {
+                const div = document.createElement('div');
+                div.className = 'mb-2';
+                div.innerHTML = `
+                    <label for="lane${i + 1}" class="block text-sm font-medium text-gray-700 mb-1">Lane ${i + 1} Targets Hit (max 40):</label>
+                    <input type="number" id="lane${i + 1}" min="0" max="40" value="0" class="mt-1 block w-full lane-score-input">
+                `;
+                laneScoresContainer.appendChild(div);
+            }
+            averageTargetsDisplay.textContent = 'N/A'; // Reset display when inputs change
+            savePart2Btn.disabled = true; // Disable save until calculated
+        }
+
+        /**
+         * Calculates the average targets hit for Part 2.
+         */
+        function calculatePart2Score() {
+            if (!currentSelectedPlatoon || !currentSelectedSquad) {
+                showMessage("Please select a platoon and squad first.", "error");
+                return;
+            }
+
+            const laneInputs = document.querySelectorAll('.lane-score-input');
+            if (laneInputs.length === 0) {
+                showMessage("Please specify the number of firing lanes.", "error");
+                return;
+            }
+
+            let totalTargets = 0;
+            let validInputs = 0;
+            laneInputs.forEach(input => {
+                const targets = parseInt(input.value);
+                if (!isNaN(targets) && targets >= 0 && targets <= 40) {
+                    totalTargets += targets;
+                    validInputs++;
+                } else {
+                    showMessage(`Invalid input for lane: ${input.id}. Targets must be between 0 and 40.`, "error");
+                    return; // Stop calculation if any input is invalid
+                }
+            });
+
+            if (validInputs === 0) {
+                averageTargetsDisplay.textContent = 'N/A';
+                savePart2Btn.disabled = true;
+                showMessage("No valid lane scores entered.", "error");
+                return;
+            }
+
+            const averageTargets = totalTargets / validInputs;
+            averageTargetsDisplay.textContent = averageTargets.toFixed(2);
+            savePart2Btn.disabled = false; // Enable save after calculation
+            showMessage("Average targets calculated. Click Save Part 2 Score.", "success");
+        }
+
+        /**
+         * Saves the calculated Part 2 score for the current squad.
+         */
+        function savePart2Score() {
+            if (!currentSelectedPlatoon || !currentSelectedSquad) {
+                showMessage("Please select a platoon and squad first.", "error");
+                return;
+            }
+            if (averageTargetsDisplay.textContent === 'N/A') {
+                showMessage("Please calculate the average targets hit first.", "error");
+                return;
+            }
+
+            const squadData = competitionData[currentSelectedPlatoon].squads[currentSelectedSquad];
+            squadData.part2Targets = parseFloat(averageTargetsDisplay.textContent);
+            if (squadData.status === 'part1_done') {
+                squadData.status = 'completed';
+            } else {
+                squadData.status = 'part2_done'; // If part1 not done yet
+            }
+            savePart2Btn.disabled = true;
+            updateScoreboard();
+            showMessage(`Part 2 score saved for ${currentSelectedSquad}!`, "success");
+        }
+
+        /**
+         * Applies penalties to the current squad.
+         */
+        function applyPenalties() {
+            if (!currentSelectedPlatoon || !currentSelectedSquad) {
+                showMessage("Please select a platoon and squad first.", "error");
+                return;
+            }
+
+            const timePenalty = parseFloat(penaltyTimeInput.value);
+            const targetPenalty = parseInt(penaltyTargetsInput.value);
+
+            if (isNaN(timePenalty) || timePenalty < 0) {
+                showMessage("Time penalty must be a non-negative number.", "error");
+                return;
+            }
+            if (isNaN(targetPenalty) || targetPenalty < 0) {
+                showMessage("Target penalty must be a non-negative integer.", "error");
+                return;
+            }
+
+            const squadData = competitionData[currentSelectedPlatoon].squads[currentSelectedSquad];
+            squadData.penaltyTime = timePenalty;
+            squadData.penaltyTargets = targetPenalty;
+
+            updateScoreboard();
+            showMessage(`Penalties applied for ${currentSelectedSquad}!`, "success");
+        }
+
+        /**
+         * Calculates the final score for a given squad.
+         * Score = (Final Targets Hit) / (Final Time for Part 1)
+         * @param {string} platoonName
+         * @param {string} squadName
+         * @returns {number|string} The calculated score or 'N/A' if not complete.
+         */
+        function calculateFinalScore(platoonName, squadName) {
+            const squadData = competitionData[platoonName].squads[squadName];
+
+            const finalPart1Time = (squadData.part1Time !== null ? squadData.part1Time : 0) + squadData.penaltyTime;
+            const finalPart2Targets = (squadData.part2Targets !== null ? squadData.part2Targets : 0) - squadData.penaltyTargets;
+
+            // Ensure targets don't go below zero
+            const effectiveTargets = Math.max(0, finalPart2Targets);
+
+            if (squadData.part1Time !== null && squadData.part2Targets !== null && finalPart1Time > 0) {
+                squadData.finalScore = effectiveTargets / finalPart1Time;
+                return squadData.finalScore.toFixed(4); // To 4 decimal places for precision
+            }
+            squadData.finalScore = null; // Reset if not complete
+            return 'N/A';
+        }
+
+        /**
+         * Updates the scoreboard table with current competition data.
+         */
+        function updateScoreboard() {
+            scoreboardTableBody.innerHTML = ''; // Clear existing rows
+
+            const allSquads = [];
+            for (const platoonName in competitionData) {
+                for (const squadName in competitionData[platoonName].squads) {
+                    allSquads.push({ platoonName, squadName, data: competitionData[platoonName].squads[squadName] });
+                }
+            }
+
+            // Sort squads by score (descending) for ranking, 'N/A' scores at the bottom
+            allSquads.sort((a, b) => {
+                const scoreA = parseFloat(calculateFinalScore(a.platoonName, a.squadName));
+                const scoreB = parseFloat(calculateFinalScore(b.platoonName, b.squadName));
+
+                if (isNaN(scoreA) && isNaN(scoreB)) return 0; // Both N/A, keep original order
+                if (isNaN(scoreA)) return 1; // A is N/A, B is a number, A goes to bottom
+                if (isNaN(scoreB)) return -1; // B is N/A, A is a number, B goes to bottom
+                return scoreB - scoreA; // Sort descending
+            });
+
+            let currentPlatoon = null;
+            for (const { platoonName, squadName, data } of allSquads) {
+                // Add platoon average row if new platoon
+                if (platoonName !== currentPlatoon) {
+                    currentPlatoon = platoonName;
+                    const platoonAvgRow = document.createElement('tr');
+                    platoonAvgRow.className = 'platoon-score-row';
+                    // Calculate platoon average
+                    let totalPlatoonScore = 0;
+                    let completedSquadsInPlatoon = 0;
+                    for (const sName in competitionData[platoonName].squads) {
+                        const score = parseFloat(calculateFinalScore(platoonName, sName));
+                        if (!isNaN(score)) {
+                            totalPlatoonScore += score;
+                            completedSquadsInPlatoon++;
+                        }
+                    }
+                    const platoonAverage = completedSquadsInPlatoon > 0 ? (totalPlatoonScore / completedSquadsInPlatoon).toFixed(4) : 'N/A';
+                    competitionData[platoonName].platoonAverageScore = platoonAverage;
+
+                    platoonAvgRow.innerHTML = `
+                        <td class="px-6 py-3 text-lg font-bold" colspan="8">${platoonName} Average Score:</td>
+                        <td class="px-6 py-3 text-lg font-bold">${platoonAverage}</td>
+                    `;
+                    scoreboardTableBody.appendChild(platoonAvgRow);
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${platoonName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${squadName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.part1Time !== null ? data.part1Time.toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.part2Targets !== null ? data.part2Targets.toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.penaltyTime.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.penaltyTargets}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${(data.part1Time !== null ? (data.part1Time + data.penaltyTime).toFixed(2) : 'N/A')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${(data.part2Targets !== null ? Math.max(0, data.part2Targets - data.penaltyTargets).toFixed(2) : 'N/A')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${calculateFinalScore(platoonName, squadName)}</td>
+                `;
+                scoreboardTableBody.appendChild(row);
+            }
+        }
+
+        // Event Listeners
+        platoonSelect.addEventListener('change', populateSquadSelect);
+        squadSelect.addEventListener('change', () => {
+            currentSelectedPlatoon = platoonSelect.value;
+            currentSelectedSquad = squadSelect.value;
+            updateCurrentSquadDisplay();
+        });
+        startTimerBtn.addEventListener('click', startTimer);
+        stopTimerBtn.addEventListener('click', stopTimer);
+        savePart1Btn.addEventListener('click', savePart1Time);
+        numLanesInput.addEventListener('change', generateLaneScoreInputs);
+        calculatePart2Btn.addEventListener('click', calculatePart2Score);
+        savePart2Btn.addEventListener('click', savePart2Score);
+        applyPenaltiesBtn.addEventListener('click', applyPenalties);
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            populatePlatoonSelect();
+            populateSquadSelect(); // To initialize squad select and display
+            generateLaneScoreInputs(); // Generate initial lane inputs
+            updateScoreboard(); // Populate initial scoreboard
+            updateCurrentSquadDisplay(); // Set initial button states
+        });
     </script>
 </body>
 </html>
