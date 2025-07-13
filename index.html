@@ -3,990 +3,853 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Black Knights BMS</title>
+    <title>Black Knights BMS Manager</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for Inter font and general aesthetics */
+        /* Custom styles for better aesthetics and responsiveness */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a202c; /* Dark background */
-            color: #e2e8f0; /* Light text */
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align to top */
-            min-height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            color: #334155; /* Darker text */
         }
-        #app-container {
-            background-color: #2d3748; /* Slightly lighter dark background for container */
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-            width: 100%;
+        .container {
             max-width: 1200px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 30px;
+            margin: 0 auto;
+            padding: 1rem;
         }
-        @media (min-width: 1024px) {
-            #app-container {
-                grid-template-columns: 2fr 1fr; /* Two columns on large screens */
-            }
-            #main-content {
-                grid-column: 1;
-            }
-            #sidebar {
-                grid-column: 2;
-            }
-        }
-        h1, h2 {
-            color: #63b3ed; /* A nice blue for headings */
-            font-weight: 700;
-        }
-        .section-card {
-            background-color: #4a5568; /* Card background */
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }
         .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
             font-weight: 600;
+            transition: all 0.2s ease-in-out;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 0.5rem;
         }
         .btn-primary {
-            background-color: #63b3ed; /* Blue */
-            color: #fff;
+            background-color: #3b82f6; /* Blue */
+            color: #ffffff;
         }
         .btn-primary:hover {
-            background-color: #4299e1;
+            background-color: #2563eb; /* Darker blue */
             transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .btn-danger {
-            background-color: #fc8181; /* Red */
-            color: #fff;
+            background-color: #ef4444; /* Red */
+            color: #ffffff;
         }
         .btn-danger:hover {
-            background-color: #e53e3e;
+            background-color: #dc2626; /* Darker red */
             transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .btn-secondary {
-            background-color: #a0aec0; /* Gray */
-            color: #fff;
+            background-color: #6b7280; /* Gray */
+            color: #ffffff;
         }
         .btn-secondary:hover {
-            background-color: #718096;
+            background-color: #4b5563; /* Darker gray */
             transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        input[type="number"], input[type="text"], select {
-            background-color: #2d3748;
-            border: 1px solid #4a5568;
-            color: #e2e8f0;
-            padding: 10px;
-            border-radius: 8px;
+        .input-field {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db; /* Light gray border */
             width: 100%;
             box-sizing: border-box;
+            background-color: #f9fafb; /* Very light gray background */
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6; /* Blue focus ring */
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 1rem;
         }
         th, td {
-            padding: 12px 15px;
+            padding: 0.75rem;
             text-align: left;
-            border-bottom: 1px solid #4a5568;
+            border-bottom: 1px solid #e5e7eb; /* Light gray border */
         }
         th {
-            background-color: #4a5568;
-            color: #fff;
-            font-weight: 600;
+            background-color: #e2e8f0; /* Lighter blue-gray for headers */
+            font-weight: 700;
+            color: #475569;
         }
-        tr:hover {
-            background-color: #4a5568;
+        tr:nth-child(even) {
+            background-color: #f8fafc; /* Alternate row background */
         }
-        .message-box {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #2d3748;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
+        .modal {
             display: none; /* Hidden by default */
-            flex-direction: column;
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
-            min-width: 300px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 2rem;
+            border: 1px solid #888;
+            width: 90%; /* Responsive width */
+            max-width: 500px;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
             text-align: center;
         }
-        .message-box p {
-            font-size: 1.1em;
-            color: #e2e8f0;
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
         }
-        .message-box button {
-            margin-top: 10px;
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
         }
-        .message-box .confirm-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1d4ed8; /* Darker blue for timer */
+            text-align: center;
+            padding: 1rem;
+            background-color: #eff6ff; /* Very light blue background */
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+        @media (max-width: 768px) {
+            .grid-cols-2 {
+                grid-template-columns: 1fr; /* Stack columns on small screens */
+            }
+            .btn {
+                width: 100%;
+                margin-bottom: 0.75rem;
+            }
+            .btn:last-child {
+                margin-bottom: 0;
+            }
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                border: 1px solid #e5e7eb;
+                margin-bottom: 0.75rem;
+                border-radius: 0.5rem;
+            }
+            td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+                text-align: right;
+            }
+            td:before {
+                position: absolute;
+                top: 0;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: 600;
+                color: #475569;
+            }
+            /* Data labels for mobile table */
+            td:nth-of-type(1):before { content: "Platoon:"; }
+            td:nth-of-type(2):before { content: "Squad:"; }
+            td:nth-of-type(3):before { content: "Time (M:S.ms):"; }
+            td:nth-of-type(4):before { content: "Targets Hit:"; }
+            td:nth-of-type(5):before { content: "Squad Score:"; }
+            td:nth-of-type(6):before { content: "Status:"; }
         }
     </style>
 </head>
-<body>
-    <div id="app-container">
-        <!-- Main Content Area -->
-        <div id="main-content" class="space-y-8">
-            <h1 class="text-4xl text-center mb-8">Black Knights BMS</h1>
+<body class="bg-gray-100 p-4">
+    <div class="container">
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-8">Platoon Competition Manager</h1>
 
-            <!-- Message Box for alerts and confirmations -->
-            <div id="messageBox" class="message-box">
-                <p id="messageText"></p>
-                <div id="confirmButtons" class="confirm-buttons" style="display: none;">
-                    <button id="confirmYes" class="btn btn-danger">Yes</button>
-                    <button id="confirmNo" class="btn btn-secondary">No</button>
+        <!-- Modal for confirmations/messages -->
+        <div id="appModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal()">&times;</span>
+                <p id="modalMessage" class="text-lg font-semibold mb-4"></p>
+                <div id="modalButtons" class="flex justify-center gap-4">
+                    <!-- Buttons will be injected here -->
                 </div>
-                <button id="closeMessageBox" class="btn btn-primary" style="display: none;">OK</button>
-            </div>
-
-            <!-- Platoon & Squad Selection -->
-            <div class="section-card">
-                <h2 class="text-2xl mb-4">Select Squad</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="platoonSelect" class="block text-sm font-medium mb-1">Platoon:</label>
-                        <select id="platoonSelect" class="mt-1 block w-full">
-                            <option value="">Select Platoon</option>
-                            <option value="Crusaders">Crusaders</option>
-                            <option value="Samurai">Samurai</option>
-                            <option value="Goonies">Goonies</option>
-                            <option value="Nightsalkers">Nightsalkers</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="squadSelect" class="block text-sm font-medium mb-1">Squad:</label>
-                        <select id="squadSelect" class="mt-1 block w-full">
-                            <option value="">Select Squad</option>
-                            <!-- Squad options will be populated by JS -->
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Part 1: Equipment Move -->
-            <div class="section-card">
-                <h2 class="text-2xl mb-4">Part 1: Equipment Move (Timed)</h2>
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
-                    <div class="text-4xl font-mono" id="timerDisplay">00:00.00</div>
-                    <div class="flex gap-2">
-                        <button id="startTimerBtn" class="btn btn-primary">Start</button>
-                        <button id="stopTimerBtn" class="btn btn-danger" disabled>Stop</button>
-                        <button id="resetTimerBtn" class="btn btn-secondary" disabled>Reset</button>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label for="manualTimeInput" class="block text-sm font-medium mb-1">Manual Time (seconds):</label>
-                    <input type="number" id="manualTimeInput" class="mt-1 block w-full" placeholder="e.g., 120.5">
-                </div>
-                <button id="savePart1Btn" class="btn btn-primary w-full" disabled>Save Part 1 Score</button>
-            </div>
-
-            <!-- Part 2: Firing Range -->
-            <div class="section-card">
-                <h2 class="text-2xl mb-4">Part 2: Firing Range (Targets Hit)</h2>
-                <div class="mb-4">
-                    <label for="numLanesInput" class="block text-sm font-medium mb-1">Number of Firing Lanes:</label>
-                    <input type="number" id="numLanesInput" class="mt-1 block w-full" min="1" value="1">
-                </div>
-                <div id="firingLaneInputs" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <!-- Dynamic input fields for lanes will go here -->
-                </div>
-                <button id="calculatePart2Btn" class="btn btn-secondary w-full mb-2" disabled>Calculate Part 2 Score</button>
-                <div class="text-lg font-bold text-right mb-4">Average Targets Hit: <span id="avgTargetsDisplay">0</span></div>
-                <button id="savePart2Btn" class="btn btn-primary w-full" disabled>Save Part 2 Score</button>
-            </div>
-
-            <!-- Penalties -->
-            <div class="section-card">
-                <h2 class="text-2xl mb-4">Penalties</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="timePenaltyInput" class="block text-sm font-medium mb-1">Time Penalty (seconds):</label>
-                        <input type="number" id="timePenaltyInput" class="mt-1 block w-full" value="0">
-                    </div>
-                    <div>
-                        <label for="targetPenaltyInput" class="block text-sm font-medium mb-1">Target Penalty (hits):</label>
-                        <input type="number" id="targetPenaltyInput" class="mt-1 block w-full" value="0">
-                    </div>
-                </div>
-                <button id="applyPenaltiesBtn" class="btn btn-danger w-full" disabled>Apply Penalties</button>
-            </div>
-
-            <!-- Admin Tools -->
-            <div class="section-card">
-                <h2 class="text-2xl mb-4">Admin Tools</h2>
-                <button id="resetAllDataBtn" class="btn btn-danger w-full">Reset All Data</button>
             </div>
         </div>
 
-        <!-- Sidebar for Scoreboard and Roadmap -->
-        <div id="sidebar" class="space-y-8">
-            <!-- Scoreboard -->
-            <div class="section-card">
-                <h2 class="text-2xl mb-4">Scoreboard</h2>
-                <table id="scoreboardTable">
+        <!-- Platoon and Squad Selection -->
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-4 text-gray-700">Select Platoon and Squad</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="platoonSelect" class="block text-sm font-medium text-gray-700 mb-1">Platoon:</label>
+                    <select id="platoonSelect" class="input-field">
+                        <option value="Crusaders">Crusaders</option>
+                        <option value="Samurai">Samurai</option>
+                        <option value="Goonies">Goonies</option>
+                        <option value="Nightsalkers">Nightsalkers</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="squadSelect" class="block text-sm font-medium text-gray-700 mb-1">Squad:</label>
+                    <select id="squadSelect" class="input-field">
+                        <option value="Squad 1">Squad 1</option>
+                        <option value="Squad 2">Squad 2</option>
+                        <option value="Squad 3">Squad 3</option>
+                        <option value="Squad 4">Squad 4</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part 1: Equipment Move -->
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-4 text-gray-700">Part 1: Equipment Move (Timed)</h2>
+            <div class="timer-display" id="timerDisplay">00:00.000</div>
+            <div class="flex flex-wrap gap-4 mb-4">
+                <button id="startTimerBtn" class="btn btn-primary flex-grow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Start Timer
+                </button>
+                <button id="stopTimerBtn" class="btn btn-danger flex-grow" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
+                    Stop Timer
+                </button>
+                <button id="recordPart1Btn" class="btn btn-secondary flex-grow" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save"><path d="M19 21H5a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h10l4 4v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Record Time
+                </button>
+            </div>
+            <div class="mb-4">
+                <label for="part1PenaltyTime" class="block text-sm font-medium text-gray-700 mb-1">Part 1 Penalty (seconds):</label>
+                <input type="number" id="part1PenaltyTime" class="input-field" value="0" min="0">
+            </div>
+            <button id="applyPart1PenaltyBtn" class="btn btn-secondary w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-timer-reset"><path d="M10 2h4"/><path d="M12 14v4"/><path d="M4 13a8 8 0 0 0 15.6 2"/><path d="M2 9.5C2 7 4 5 6.5 5H18a2 2 0 0 1 2 2v.5"/><path d="M9 9l3-3 3 3"/></svg>
+                Apply Part 1 Penalty
+            </button>
+        </div>
+
+        <!-- Part 2: Firing Range -->
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-4 text-gray-700">Part 2: Firing Range (Manual Entry)</h2>
+            <div class="mb-4">
+                <label for="numLanes" class="block text-sm font-medium text-gray-700 mb-1">Number of Firing Lanes:</label>
+                <input type="number" id="numLanes" class="input-field" value="1" min="1" max="40">
+            </div>
+            <button id="generateLanesBtn" class="btn btn-secondary w-full mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grid-3x3"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                Generate Lane Inputs
+            </button>
+            <div id="firingLaneInputs" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <!-- Firing lane input fields will be generated here -->
+            </div>
+            <div class="mb-4">
+                <label for="part2PenaltyTargets" class="block text-sm font-medium text-gray-700 mb-1">Part 2 Penalty (targets to remove):</label>
+                <input type="number" id="part2PenaltyTargets" class="input-field" value="0" min="0">
+            </div>
+            <button id="recordPart2Btn" class="btn btn-primary w-full mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                Record Firing Scores
+            </button>
+            <button id="applyPart2PenaltyBtn" class="btn btn-secondary w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-circle"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+                Apply Part 2 Penalty
+            </button>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-4 text-gray-700">Scoreboard</h2>
+            <div class="overflow-x-auto">
+                <table id="scoreboard" class="min-w-full">
                     <thead>
                         <tr>
                             <th>Platoon</th>
-                            <th>Avg. Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Scoreboard rows will be populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Squad Performance Breakdown -->
-            <div class="section-card">
-                <h2 class="text-2xl mb-4">Squad Performance Breakdown</h2>
-                <table id="squadPerformanceTable">
-                    <thead>
-                        <tr>
                             <th>Squad</th>
-                            <th>Time (s)</th>
-                            <th>Targets</th>
-                            <th>Final Score</th>
+                            <th>Time (M:S.ms)</th>
+                            <th>Targets Hit</th>
+                            <th>Squad Score</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Squad performance rows will be populated by JS -->
+                        <!-- Squad scores will be rendered here -->
                     </tbody>
                 </table>
             </div>
-
-            <!-- Roadmap to Victory -->
-            <div class="section-card">
-                <h2 class="text-2xl mb-4">Roadmap to Victory</h2>
-                <div id="roadmapContent" class="text-sm leading-relaxed space-y-2">
-                    <p class="text-gray-400">Roadmap will appear here as squads complete their runs.</p>
-                </div>
+            <h3 class="text-xl font-bold mt-6 mb-3 text-gray-700">Platoon Averages</h3>
+            <div class="overflow-x-auto">
+                <table id="platoonAverages" class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th>Platoon</th>
+                            <th>Average Score</th>
+                            <th>Completed Squads</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Platoon averages will be rendered here -->
+                    </tbody>
+                </table>
             </div>
+        </div>
+
+        <!-- Report and Reset -->
+        <div class="card flex flex-wrap gap-4 justify-center">
+            <button id="generateReportBtn" class="btn btn-primary flex-grow md:flex-grow-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                Generate Report
+            </button>
+            <button id="resetEventBtn" class="btn btn-danger flex-grow md:flex-grow-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.76 2.75L3 8"/><path d="M3 3v5h5"/></svg>
+                Reset Event
+            </button>
         </div>
     </div>
 
-    <script type="module">
-        // Firebase SDK Imports
-        import { initializeApp } = "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot, getDocs, deleteDoc } = "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        // Data structure to hold all competition information
+        let competitionData = {
+            platoons: [
+                { name: "Crusaders", squads: [] },
+                { name: "Samurai", squads: [] },
+                { name: "Goonies", squads: [] },
+                { name: "Nightsalkers", squads: [] }
+            ]
+        };
 
-        // Initialize Firebase variables (provided by Canvas environment)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // --- Firebase Initialization ---
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        let currentUserId = null; // To store the authenticated user's ID
-
-        // --- Global Variables ---
-        let squadsData = []; // Array to hold all squad data, synced with Firestore
-        let currentSquadId = null; // ID of the currently selected squad
-        let timerInterval;
-        let startTime;
-        let elapsedTime = 0; // Stores elapsed time in milliseconds
+        // Initialize squads for each platoon
+        // Each platoon has 4 squads
+        competitionData.platoons.forEach(platoon => {
+            for (let i = 1; i <= 4; i++) {
+                platoon.squads.push({
+                    id: `${platoon.name.toLowerCase()}-squad-${i}`,
+                    name: `Squad ${i}`,
+                    part1: { actualTime: 0, penaltyTime: 0, totalTime: 0 }, // Time in milliseconds
+                    part2: { laneScores: [], actualTargets: 0, penaltyTargets: 0, totalTargets: 0, averageTargets: 0 },
+                    squadScore: 0,
+                    completed: false // True when both Part 1 and Part 2 are recorded
+                });
+            }
+        });
 
         // --- DOM Elements ---
         const platoonSelect = document.getElementById('platoonSelect');
         const squadSelect = document.getElementById('squadSelect');
+
         const timerDisplay = document.getElementById('timerDisplay');
         const startTimerBtn = document.getElementById('startTimerBtn');
         const stopTimerBtn = document.getElementById('stopTimerBtn');
-        const resetTimerBtn = document.getElementById('resetTimerBtn');
-        const manualTimeInput = document.getElementById('manualTimeInput');
-        const savePart1Btn = document.getElementById('savePart1Btn');
-        const numLanesInput = document.getElementById('numLanesInput');
-        const firingLaneInputs = document.getElementById('firingLaneInputs');
-        const calculatePart2Btn = document.getElementById('calculatePart2Btn');
-        const avgTargetsDisplay = document.getElementById('avgTargetsDisplay');
-        const savePart2Btn = document.getElementById('savePart2Btn');
-        const timePenaltyInput = document.getElementById('timePenaltyInput');
-        const targetPenaltyInput = document.getElementById('targetPenaltyInput');
-        const applyPenaltiesBtn = document.getElementById('applyPenaltiesBtn');
-        const scoreboardTableBody = document.querySelector('#scoreboardTable tbody');
-        const squadPerformanceTableBody = document.querySelector('#squadPerformanceTable tbody');
-        const roadmapContent = document.getElementById('roadmapContent');
-        const messageBox = document.getElementById('messageBox');
-        const messageText = document.getElementById('messageText');
-        const confirmButtons = document.getElementById('confirmButtons');
-        const confirmYesBtn = document.getElementById('confirmYes');
-        const confirmNoBtn = document.getElementById('confirmNo');
-        const closeMessageBox = document.getElementById('closeMessageBox');
-        const resetAllDataBtn = document.getElementById('resetAllDataBtn'); // New button
+        const recordPart1Btn = document.getElementById('recordPart1Btn');
+        const part1PenaltyTimeInput = document.getElementById('part1PenaltyTime');
+        const applyPart1PenaltyBtn = document.getElementById('applyPart1PenaltyBtn');
+
+        const numLanesInput = document.getElementById('numLanes');
+        const generateLanesBtn = document.getElementById('generateLanesBtn');
+        const firingLaneInputsDiv = document.getElementById('firingLaneInputs');
+        const part2PenaltyTargetsInput = document.getElementById('part2PenaltyTargets');
+        const recordPart2Btn = document.getElementById('recordPart2Btn');
+        const applyPart2PenaltyBtn = document.getElementById('applyPart2PenaltyBtn');
+
+        const scoreboardBody = document.querySelector('#scoreboard tbody');
+        const platoonAveragesBody = document.querySelector('#platoonAverages tbody');
+        const generateReportBtn = document.getElementById('generateReportBtn');
+        const resetEventBtn = document.getElementById('resetEventBtn');
+
+        const appModal = document.getElementById('appModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalButtons = document.getElementById('modalButtons');
+
+        // --- Timer Variables ---
+        let timerInterval;
+        let startTime;
+        let elapsedTime = 0; // Stores time in milliseconds
+
+        // --- Modal Functions ---
+        function showModal(message, type = 'alert', onConfirm = null) {
+            modalMessage.textContent = message;
+            modalButtons.innerHTML = ''; // Clear previous buttons
+
+            if (type === 'confirm') {
+                const confirmBtn = document.createElement('button');
+                confirmBtn.textContent = 'Confirm';
+                confirmBtn.className = 'btn btn-danger';
+                confirmBtn.onclick = () => {
+                    if (onConfirm) onConfirm();
+                    closeModal();
+                };
+                modalButtons.appendChild(confirmBtn);
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.className = 'btn btn-secondary';
+                cancelBtn.onclick = closeModal;
+                modalButtons.appendChild(cancelBtn);
+            } else { // 'alert' type
+                const okBtn = document.createElement('button');
+                okBtn.textContent = 'OK';
+                okBtn.className = 'btn btn-primary';
+                okBtn.onclick = closeModal;
+                modalButtons.appendChild(okBtn);
+            }
+            appModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            appModal.classList.add('hidden');
+        }
 
         // --- Utility Functions ---
+
+        /**
+         * Formats milliseconds into MM:SS.ms string.
+         * @param {number} ms - Time in milliseconds.
+         * @returns {string} Formatted time string.
+         */
         function formatTime(ms) {
-            const totalSeconds = ms / 1000;
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = Math.floor(totalSeconds % 60);
-            const milliseconds = Math.floor((totalSeconds - Math.floor(totalSeconds)) * 100);
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            const milliseconds = Math.floor(ms % 1000);
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
         }
 
         /**
-         * Displays a message box. Can be used for simple alerts or confirmations.
-         * @param {string} message The message to display.
-         * @param {boolean} isConfirm If true, shows Yes/No buttons; otherwise, shows an OK button.
-         * @returns {Promise<boolean>} Resolves to true for 'Yes', false for 'No' (only if isConfirm is true).
+         * Converts formatted time string (MM:SS.ms) to milliseconds.
+         * @param {string} timeString - Formatted time string.
+         * @returns {number} Time in milliseconds.
          */
-        function showMessage(message, isConfirm = false) {
-            messageText.textContent = message;
-            if (isConfirm) {
-                confirmButtons.style.display = 'flex';
-                closeMessageBox.style.display = 'none';
-            } else {
-                confirmButtons.style.display = 'none';
-                closeMessageBox.style.display = 'block';
+        function parseTime(timeString) {
+            const parts = timeString.split(/[:.]/);
+            if (parts.length !== 3) return 0; // Invalid format
+            const minutes = parseInt(parts[0], 10);
+            const seconds = parseInt(parts[1], 10);
+            const milliseconds = parseInt(parts[2], 10);
+            return (minutes * 60 * 1000) + (seconds * 1000) + milliseconds;
+        }
+
+        /**
+         * Gets the currently selected squad object from competitionData.
+         * @returns {object|null} The selected squad object or null if not found.
+         */
+        function getSelectedSquad() {
+            const platoonName = platoonSelect.value;
+            const squadName = squadSelect.value;
+            const platoon = competitionData.platoons.find(p => p.name === platoonName);
+            if (platoon) {
+                return platoon.squads.find(s => s.name === squadName);
             }
-            messageBox.style.display = 'flex';
-
-            return new Promise((resolve) => {
-                const handleClose = () => {
-                    messageBox.style.display = 'none';
-                    closeMessageBox.removeEventListener('click', handleClose);
-                    confirmYesBtn.removeEventListener('click', handleYes);
-                    confirmNoBtn.removeEventListener('click', handleNo);
-                };
-
-                const handleYes = () => {
-                    handleClose();
-                    resolve(true);
-                };
-
-                const handleNo = () => {
-                    handleClose();
-                    resolve(false);
-                };
-
-                if (isConfirm) {
-                    confirmYesBtn.addEventListener('click', handleYes);
-                    confirmNoBtn.addEventListener('click', handleNo);
-                } else {
-                    closeMessageBox.addEventListener('click', handleClose);
-                }
-            });
+            return null;
         }
 
-        // --- Firebase Data Operations ---
+        /**
+         * Saves the current competition data to localStorage.
+         */
+        function saveData() {
+            try {
+                localStorage.setItem('competitionData', JSON.stringify(competitionData));
+            } catch (e) {
+                console.error("Error saving to localStorage:", e);
+                showModal("Could not save data. Your browser's storage might be full or disabled.", 'alert');
+            }
+        }
 
         /**
-         * Initializes default squad data and saves it to Firestore if the collection is empty.
-         * This ensures the app has initial data when first run.
+         * Loads competition data from localStorage.
          */
-        async function initializeDefaultSquadsAndSave() {
-            const platoons = ['Crusaders', 'Samurai', 'Goonies', 'Nightsalkers'];
-            const initialSquads = [];
-            platoons.forEach(platoon => {
-                for (let i = 1; i <= 4; i++) {
-                    initialSquads.push({
-                        id: `${platoon}-Squad-${i}`,
-                        platoon: platoon,
-                        squad: `Squad ${i}`,
-                        part1Time: null, // Time in seconds (raw)
-                        part1Penalty: 0, // Additional time in seconds
-                        part1ActualTime: null, // part1Time + part1Penalty
-                        part2Targets: null, // Average targets hit (raw)
-                        part2Penalty: 0, // Deducted targets
-                        part2ActualTargets: null, // part2Targets - part2Penalty
-                        finalScore: null, // (part2ActualTargets / part1ActualTime)
-                        status: 'Not Started' // 'Not Started', 'Part 1 Complete', 'Part 2 Complete', 'Completed'
+        function loadData() {
+            try {
+                const storedData = localStorage.getItem('competitionData');
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData);
+                    // Deep merge to preserve structure for new fields if any
+                    competitionData.platoons.forEach(platoon => {
+                        const storedPlatoon = parsedData.platoons.find(p => p.name === platoon.name);
+                        if (storedPlatoon) {
+                            platoon.squads.forEach(squad => {
+                                const storedSquad = storedPlatoon.squads.find(s => s.id === squad.id);
+                                if (storedSquad) {
+                                    Object.assign(squad.part1, storedSquad.part1);
+                                    Object.assign(squad.part2, storedSquad.part2);
+                                    squad.squadScore = storedSquad.squadScore || 0;
+                                    squad.completed = storedSquad.completed || false;
+                                }
+                            });
+                        }
                     });
                 }
-            });
-
-            console.log("Initializing default squads and saving to Firestore...");
-            for (const squad of initialSquads) {
-                try {
-                    // Use the squad.id as the document ID for easy retrieval
-                    const docRef = doc(db, `artifacts/${appId}/public/data/squads`, squad.id);
-                    await setDoc(docRef, squad);
-                } catch (e) {
-                    console.error("Error adding initial squad document: ", e);
-                    showMessage("Error initializing default squads. Check console for details.");
-                }
-            }
-            console.log("Default squads initialized.");
-            // The onSnapshot listener will automatically pick up these changes
-        }
-
-        /**
-         * Sets up a real-time listener for squad data from Firestore.
-         * Updates the global squadsData array and refreshes the UI.
-         */
-        function loadSquadsFromFirestore() {
-            if (!db) {
-                console.error("Firestore not initialized when trying to load data.");
-                return;
-            }
-
-            const squadsCollectionRef = collection(db, `artifacts/${appId}/public/data/squads`);
-
-            onSnapshot(squadsCollectionRef, (snapshot) => {
-                const fetchedSquads = [];
-                snapshot.forEach(doc => {
-                    fetchedSquads.push(doc.data());
-                });
-
-                if (fetchedSquads.length === 0) {
-                    // If no data in Firestore, initialize default squads and save them
-                    initializeDefaultSquadsAndSave();
-                } else {
-                    squadsData = fetchedSquads;
-                    console.log("Squads data loaded/updated from Firestore:", squadsData);
-                    updateUIBasedOnData(); // Centralized UI update after data sync
-                }
-            }, (error) => {
-                console.error("Error fetching squads from Firestore:", error);
-                showMessage("Failed to load competition data. Please check your internet connection.");
-            });
-        }
-
-        /**
-         * Saves a single squad's data to Firestore.
-         * @param {Object} squadToSave - The squad object to save.
-         */
-        async function saveSquadToFirestore(squadToSave) {
-            if (!db || !currentUserId) { // Ensure Firebase and auth are ready
-                console.error("Firestore or authentication not ready. Cannot save data.");
-                showMessage("Database not ready. Please wait a moment or refresh.");
-                return;
-            }
-            try {
-                // Use the squad.id as the document ID
-                const docRef = doc(db, `artifacts/${appId}/public/data/squads`, squadToSave.id);
-                await setDoc(docRef, squadToSave); // setDoc will create or overwrite the document
-                console.log("Squad document updated in Firestore:", squadToSave.id);
-                // No need to call updateUI here, onSnapshot will handle it.
             } catch (e) {
-                console.error("Error updating document in Firestore: ", e);
-                showMessage("Failed to save data. Please try again.");
+                console.error("Error loading from localStorage:", e);
+                showModal("Could not load saved data. Data might be corrupted.", 'alert');
+                localStorage.removeItem('competitionData'); // Clear corrupted data
             }
         }
 
-        // --- Centralized UI Update Function ---
         /**
-         * Calls all UI update functions after data has been loaded or changed.
+         * Calculates the squad's total time, total targets, and final score.
+         * Updates the squad object and saves data.
+         * @param {object} squad - The squad object to calculate scores for.
          */
-        function updateUIBasedOnData() {
-            populateSquadsDropdown(); // Re-populate dropdown to reflect any new/changed squads
-            updateUIForSelectedSquad();
-            updateScoreboard();
-            updateSquadPerformance();
-            generateRoadmap();
-        }
+        function calculateSquadScore(squad) {
+            // Calculate total time for Part 1 (actual + penalty)
+            squad.part1.totalTime = squad.part1.actualTime + (parseFloat(part1PenaltyTimeInput.value) * 1000); // Convert seconds to ms
 
-        // --- Squad Selection Logic ---
-        function populateSquadsDropdown() {
-            const selectedPlatoon = platoonSelect.value;
-            squadSelect.innerHTML = '<option value="">Select Squad</option>'; // Always start fresh
+            // Calculate total targets for Part 2 (actual - penalty)
+            squad.part2.totalTargets = Math.max(0, squad.part2.actualTargets - parseInt(part2PenaltyTargetsInput.value, 10));
 
-            let squadsInCurrentPlatoon = [];
-            if (selectedPlatoon) {
-                squadsInCurrentPlatoon = squadsData.filter(s => s.platoon === selectedPlatoon);
-                squadsInCurrentPlatoon.forEach(squad => {
-                    const option = document.createElement('option');
-                    option.value = squad.id;
-                    option.textContent = squad.squad;
-                    squadSelect.appendChild(option);
-                });
-            }
-
-            // After populating options for the current platoon:
-            // Check if the previously selected squad (currentSquadId) is still valid for this platoon.
-            const isCurrentSquadValidForPlatoon = currentSquadId && squadsInCurrentPlatoon.some(s => s.id === currentSquadId);
-
-            if (isCurrentSquadValidForPlatoon) {
-                squadSelect.value = currentSquadId; // Re-select if valid
+            // Calculate squad score: Targets Hit / Total Time (convert time to seconds for division)
+            if (squad.part1.totalTime > 0) {
+                squad.squadScore = squad.part2.totalTargets / (squad.part1.totalTime / 1000);
             } else {
-                currentSquadId = null; // Reset if not valid for this platoon
-                squadSelect.value = ""; // Clear visual selection
+                squad.squadScore = 0; // Avoid division by zero
             }
 
-            updateUIForSelectedSquad(); // Update UI based on the (potentially new/null) currentSquadId
+            // Mark as completed if both parts have valid scores
+            squad.completed = (squad.part1.totalTime > 0 && squad.part2.totalTargets >= 0);
+
+            saveData();
+            renderScoreboard();
         }
 
-        platoonSelect.addEventListener('change', populateSquadsDropdown);
-        squadSelect.addEventListener('change', () => {
-            currentSquadId = squadSelect.value;
-            updateUIForSelectedSquad();
-        });
+        /**
+         * Renders/updates the scoreboard and platoon averages tables.
+         */
+        function renderScoreboard() {
+            scoreboardBody.innerHTML = ''; // Clear current scoreboard
+            platoonAveragesBody.innerHTML = ''; // Clear current platoon averages
 
-        // --- Part 1: Equipment Move Timer Logic ---
-        startTimerBtn.addEventListener('click', () => {
-            if (!currentSquadId) {
-                showMessage('Please select a squad first.');
-                return;
+            const platoonScores = {}; // To store total scores and count of completed squads per platoon
+
+            competitionData.platoons.forEach(platoon => {
+                platoonScores[platoon.name] = { totalScore: 0, completedSquads: 0 };
+
+                platoon.squads.forEach(squad => {
+                    const row = scoreboardBody.insertRow();
+                    row.insertCell(0).textContent = platoon.name;
+                    row.insertCell(1).textContent = squad.name;
+                    row.insertCell(2).textContent = formatTime(squad.part1.totalTime);
+                    row.insertCell(3).textContent = squad.part2.totalTargets.toFixed(2);
+                    row.insertCell(4).textContent = squad.squadScore.toFixed(3); // Display with more precision
+                    row.insertCell(5).textContent = squad.completed ? 'Completed' : 'Pending';
+                    row.className = squad.completed ? 'bg-green-50' : 'bg-yellow-50'; // Visual cue for completion
+
+                    if (squad.completed) {
+                        platoonScores[platoon.name].totalScore += squad.squadScore;
+                        platoonScores[platoon.name].completedSquads++;
+                    }
+                });
+            });
+
+            // Render Platoon Averages
+            for (const platoonName in platoonScores) {
+                const avgData = platoonScores[platoonName];
+                const averageScore = avgData.completedSquads > 0 ? avgData.totalScore / avgData.completedSquads : 0;
+                const row = platoonAveragesBody.insertRow();
+                row.insertCell(0).textContent = platoonName;
+                row.insertCell(1).textContent = averageScore.toFixed(3);
+                row.insertCell(2).textContent = `${avgData.completedSquads} / 4`;
             }
-            startTime = Date.now() - elapsedTime;
-            timerInterval = setInterval(updateTimer, 10); // Update every 10ms for hundredths
+        }
+
+        // --- Part 1: Equipment Move Functions ---
+
+        /**
+         * Starts the timer for Part 1.
+         */
+        function startTimer() {
+            // Disable start button, enable stop and record buttons
             startTimerBtn.disabled = true;
             stopTimerBtn.disabled = false;
-            resetTimerBtn.disabled = false;
-        });
+            recordPart1Btn.disabled = true; // Can only record after stopping
 
-        stopTimerBtn.addEventListener('click', () => {
-            clearInterval(timerInterval);
-            startTimerBtn.disabled = false;
-            stopTimerBtn.disabled = true;
-            // elapsedTime is already updated by updateTimer
-        });
-
-        resetTimerBtn.addEventListener('click', () => {
-            clearInterval(timerInterval);
-            elapsedTime = 0;
-            timerDisplay.textContent = '00:00.00';
-            startTimerBtn.disabled = false;
-            stopTimerBtn.disabled = true;
-            resetTimerBtn.disabled = true;
-        });
-
-        function updateTimer() {
-            elapsedTime = Date.now() - startTime;
-            timerDisplay.textContent = formatTime(elapsedTime);
+            startTime = Date.now() - elapsedTime; // Resume from last elapsed time
+            timerInterval = setInterval(() => {
+                elapsedTime = Date.now() - startTime;
+                timerDisplay.textContent = formatTime(elapsedTime);
+            }, 10); // Update every 10 milliseconds for precision
         }
 
-        savePart1Btn.addEventListener('click', async () => {
-            if (!currentSquadId) {
-                showMessage('Please select a squad first.');
-                return;
-            }
-            let timeToSave = parseFloat(manualTimeInput.value);
-            if (isNaN(timeToSave) || timeToSave <= 0) {
-                timeToSave = elapsedTime / 1000; // Use timer value if manual is invalid
-            }
+        /**
+         * Stops the timer and enables recording the time.
+         */
+        function stopTimer() {
+            clearInterval(timerInterval);
+            startTimerBtn.disabled = false;
+            stopTimerBtn.disabled = true;
+            recordPart1Btn.disabled = false;
+        }
 
-            if (timeToSave <= 0) {
-                showMessage('Please enter a valid positive time or use the timer.');
-                return;
-            }
-
-            const squad = squadsData.find(s => s.id === currentSquadId);
+        /**
+         * Records the elapsed time for Part 1 for the selected squad.
+         */
+        function recordPart1() {
+            const squad = getSelectedSquad();
             if (squad) {
-                squad.part1Time = timeToSave;
-                squad.part1Penalty = parseFloat(timePenaltyInput.value) || 0; // Ensure penalty is applied on save
-                squad.part1ActualTime = squad.part1Time + squad.part1Penalty;
-                if (squad.status === 'Not Started') {
-                    squad.status = 'Part 1 Complete';
-                }
-                calculateAndSaveFinalScore(squad); // Updates squad.finalScore and status
-                await saveSquadToFirestore(squad); // Save to Firestore
-                showMessage(`Part 1 score saved for ${squad.id}: ${formatTime(squad.part1Time * 1000)}`);
+                squad.part1.actualTime = elapsedTime;
+                calculateSquadScore(squad);
+                showModal(`${squad.name} (Platoon ${platoonSelect.value}) Part 1 time recorded: ${formatTime(elapsedTime)}`);
+                // Reset timer for next use
+                elapsedTime = 0;
+                timerDisplay.textContent = formatTime(0);
+                recordPart1Btn.disabled = true; // Disable after recording
+            } else {
+                showModal("Please select a platoon and squad first.", 'alert');
             }
-        });
+        }
 
-        // --- Part 2: Firing Range Logic ---
-        numLanesInput.addEventListener('input', populateFiringLaneInputs);
+        /**
+         * Applies penalty time to Part 1 for the selected squad.
+         */
+        function applyPart1Penalty() {
+            const squad = getSelectedSquad();
+            if (squad) {
+                const penaltySeconds = parseFloat(part1PenaltyTimeInput.value);
+                if (isNaN(penaltySeconds) || penaltySeconds < 0) {
+                    showModal("Please enter a valid positive number for penalty time.", 'alert');
+                    return;
+                }
+                squad.part1.penaltyTime = penaltySeconds * 1000; // Convert seconds to ms
+                calculateSquadScore(squad);
+                showModal(`Part 1 penalty of ${penaltySeconds} seconds applied to ${squad.name} (Platoon ${platoonSelect.value}).`);
+            } else {
+                showModal("Please select a platoon and squad first.", 'alert');
+            }
+        }
 
-        function populateFiringLaneInputs() {
-            const numLanes = parseInt(numLanesInput.value);
-            firingLaneInputs.innerHTML = ''; // Clear previous inputs
+        // --- Part 2: Firing Range Functions ---
 
-            if (isNaN(numLanes) || numLanes < 1) {
-                numLanesInput.value = 1; // Default to 1 if invalid
+        /**
+         * Generates input fields for firing lanes based on the number of lanes specified.
+         */
+        function generateLaneInputs() {
+            const numLanes = parseInt(numLanesInput.value, 10);
+            if (isNaN(numLanes) || numLanes <= 0) {
+                showModal("Please enter a valid number of firing lanes (at least 1).", 'alert');
                 return;
             }
 
+            firingLaneInputsDiv.innerHTML = ''; // Clear existing inputs
             for (let i = 1; i <= numLanes; i++) {
                 const div = document.createElement('div');
+                div.className = 'flex flex-col';
                 div.innerHTML = `
-                    <label for="lane${i}" class="block text-sm font-medium mb-1">Lane ${i} Targets Hit (Max 40):</label>
-                    <input type="number" id="lane${i}" class="mt-1 block w-full lane-score-input" min="0" max="40" value="0">
+                    <label for="lane-${i}" class="block text-sm font-medium text-gray-700 mb-1">Lane ${i} Targets Hit (out of 40):</label>
+                    <input type="number" id="lane-${i}" class="input-field" value="0" min="0" max="40">
                 `;
-                firingLaneInputs.appendChild(div);
+                firingLaneInputsDiv.appendChild(div);
             }
         }
 
-        calculatePart2Btn.addEventListener('click', () => {
-            if (!currentSquadId) {
-                showMessage('Please select a squad first.');
-                return;
-            }
-            const laneInputs = document.querySelectorAll('.lane-score-input');
-            let totalTargets = 0;
-            let validLanes = 0;
-
-            laneInputs.forEach(input => {
-                const targets = parseInt(input.value);
-                if (!isNaN(targets) && targets >= 0 && targets <= 40) {
-                    totalTargets += targets;
-                    validLanes++;
-                }
-            });
-
-            if (validLanes === 0) {
-                avgTargetsDisplay.textContent = '0';
-                showMessage('No valid lane scores entered.');
-                return;
-            }
-
-            const averageTargets = totalTargets / validLanes;
-            avgTargetsDisplay.textContent = averageTargets.toFixed(2);
-        });
-
-        savePart2Btn.addEventListener('click', async () => {
-            if (!currentSquadId) {
-                showMessage('Please select a squad first.');
-                return;
-            }
-            const squad = squadsData.find(s => s.id === currentSquadId);
+        /**
+         * Records the firing range scores for the selected squad.
+         */
+        function recordPart2() {
+            const squad = getSelectedSquad();
             if (squad) {
-                const currentAvgTargets = parseFloat(avgTargetsDisplay.textContent);
-                if (isNaN(currentAvgTargets)) {
-                    showMessage('Please calculate the Part 2 score first.');
+                const numLanes = parseInt(numLanesInput.value, 10);
+                const laneScores = [];
+                let totalTargets = 0;
+
+                for (let i = 1; i <= numLanes; i++) {
+                    const input = document.getElementById(`lane-${i}`);
+                    if (!input) {
+                        showModal(`Error: Lane ${i} input not found. Please regenerate lanes.`, 'alert');
+                        return;
+                    }
+                    const score = parseInt(input.value, 10);
+                    if (isNaN(score) || score < 0 || score > 40) {
+                        showModal(`Please enter a valid number of targets hit (0-40) for Lane ${i}.`, 'alert');
+                        return;
+                    }
+                    laneScores.push(score);
+                    totalTargets += score;
+                }
+
+                squad.part2.laneScores = laneScores;
+                squad.part2.actualTargets = totalTargets;
+                squad.part2.averageTargets = numLanes > 0 ? totalTargets / numLanes : 0;
+
+                calculateSquadScore(squad);
+                showModal(`${squad.name} (Platoon ${platoonSelect.value}) Part 2 scores recorded. Total targets: ${totalTargets}. Average: ${squad.part2.averageTargets.toFixed(2)}`);
+            } else {
+                showModal("Please select a platoon and squad first.", 'alert');
+            }
+        }
+
+        /**
+         * Applies penalty targets to Part 2 for the selected squad.
+         */
+        function applyPart2Penalty() {
+            const squad = getSelectedSquad();
+            if (squad) {
+                const penaltyTargets = parseInt(part2PenaltyTargetsInput.value, 10);
+                if (isNaN(penaltyTargets) || penaltyTargets < 0) {
+                    showModal("Please enter a valid positive number for penalty targets.", 'alert');
                     return;
                 }
-                squad.part2Targets = currentAvgTargets;
-                squad.part2Penalty = parseFloat(targetPenaltyInput.value) || 0; // Ensure penalty is applied on save
-                squad.part2ActualTargets = squad.part2Targets - squad.part2Penalty;
-                if (squad.status === 'Part 1 Complete' || squad.status === 'Not Started') {
-                    squad.status = 'Part 2 Complete';
-                }
-                if (squad.part1Time !== null && squad.part2Targets !== null) {
-                    squad.status = 'Completed';
-                }
-                calculateAndSaveFinalScore(squad); // Updates squad.finalScore and status
-                await saveSquadToFirestore(squad); // Save to Firestore
-                showMessage(`Part 2 score saved for ${squad.id}: ${squad.part2Targets.toFixed(2)} average targets.`);
-            }
-        });
-
-        // --- Penalties Logic ---
-        applyPenaltiesBtn.addEventListener('click', async () => {
-            if (!currentSquadId) {
-                showMessage('Please select a squad first.');
-                return;
-            }
-            const squad = squadsData.find(s => s.id === currentSquadId);
-            if (squad) {
-                const timePenalty = parseFloat(timePenaltyInput.value) || 0;
-                const targetPenalty = parseFloat(targetPenaltyInput.value) || 0;
-
-                squad.part1Penalty = timePenalty;
-                squad.part2Penalty = targetPenalty;
-
-                // Recalculate actual scores with penalties
-                if (squad.part1Time !== null) {
-                    squad.part1ActualTime = squad.part1Time + squad.part1Penalty;
-                }
-                if (squad.part2Targets !== null) {
-                    squad.part2ActualTargets = squad.part2Targets - squad.part2Penalty;
-                }
-
-                calculateAndSaveFinalScore(squad); // Updates squad.finalScore and status
-                await saveSquadToFirestore(squad); // Save to Firestore
-                showMessage(`Penalties applied for ${squad.id}.`);
-            }
-        });
-
-        // --- Score Calculation ---
-        function calculateAndSaveFinalScore(squad) {
-            if (squad.part1ActualTime !== null && squad.part2ActualTargets !== null) {
-                // Ensure time is not zero to avoid division by zero
-                if (squad.part1ActualTime > 0) {
-                    squad.finalScore = squad.part2ActualTargets / squad.part1ActualTime;
-                } else {
-                    squad.finalScore = 0; // Or handle as an error/infinite score
-                }
-                squad.status = 'Completed';
+                squad.part2.penaltyTargets = penaltyTargets;
+                calculateSquadScore(squad);
+                showModal(`Part 2 penalty of ${penaltyTargets} targets applied to ${squad.name} (Platoon ${platoonSelect.value}).`);
             } else {
-                squad.finalScore = null;
+                showModal("Please select a platoon and squad first.", 'alert');
             }
         }
 
-        // --- Scoreboard Update ---
-        function updateScoreboard() {
-            const platoonScores = {}; // { PlatoonName: { totalScore: 0, completedSquads: 0, totalSquads: 4 } }
+        // --- Report and Reset Functions ---
 
-            // Initialize platoon scores
-            ['Crusaders', 'Samurai', 'Goonies', 'Nightsalkers'].forEach(platoon => {
-                platoonScores[platoon] = { totalScore: 0, completedSquads: 0, totalSquads: 4, averageScore: 0 };
+        /**
+         * Generates a text report of all competition data and allows downloading.
+         */
+        function generateReport() {
+            let reportContent = "Platoon Competition Report\n\n";
+
+            reportContent += "--- Squad Scores ---\n";
+            competitionData.platoons.forEach(platoon => {
+                platoon.squads.forEach(squad => {
+                    reportContent += `\nPlatoon: ${platoon.name}, Squad: ${squad.name}\n`;
+                    reportContent += `  Part 1 - Actual Time: ${formatTime(squad.part1.actualTime)}\n`;
+                    reportContent += `  Part 1 - Penalty Time: ${squad.part1.penaltyTime / 1000} seconds\n`;
+                    reportContent += `  Part 1 - Total Time: ${formatTime(squad.part1.totalTime)}\n`;
+                    reportContent += `  Part 2 - Actual Targets Hit (Sum): ${squad.part2.actualTargets}\n`;
+                    reportContent += `  Part 2 - Average Targets Hit (per lane): ${squad.part2.averageTargets.toFixed(2)}\n`;
+                    reportContent += `  Part 2 - Penalty Targets: ${squad.part2.penaltyTargets}\n`;
+                    reportContent += `  Part 2 - Total Targets (after penalty): ${squad.part2.totalTargets.toFixed(2)}\n`;
+                    reportContent += `  Squad Score (Targets / Time): ${squad.squadScore.toFixed(3)}\n`;
+                    reportContent += `  Status: ${squad.completed ? 'Completed' : 'Pending'}\n`;
+                });
             });
 
-            squadsData.forEach(squad => {
-                if (squad.status === 'Completed' && squad.finalScore !== null) {
-                    platoonScores[squad.platoon].totalScore += squad.finalScore;
-                    platoonScores[squad.platoon].completedSquads++;
-                }
-            });
-
-            // Calculate average scores and sort
-            const sortedPlatoons = Object.keys(platoonScores).map(platoonName => {
-                const platoon = platoonScores[platoonName];
-                platoon.averageScore = platoon.completedSquads > 0 ? platoon.totalScore / platoon.completedSquads : 0;
-                return {
-                    platoon: platoonName,
-                    averageScore: platoon.averageScore,
-                    completedSquads: platoon.completedSquads
-                };
-            }).sort((a, b) => b.averageScore - a.averageScore); // Sort descending
-
-            // Populate scoreboard table
-            scoreboardTableBody.innerHTML = '';
-            sortedPlatoons.forEach(platoon => {
-                const row = scoreboardTableBody.insertRow();
-                row.innerHTML = `
-                    <td class="font-bold">${platoon.platoon}</td>
-                    <td>${platoon.averageScore.toFixed(4)}</td>
-                `;
-            });
-        }
-
-        // --- Squad Performance Breakdown Update ---
-        function updateSquadPerformance() {
-            squadPerformanceTableBody.innerHTML = ''; // Clear previous rows
-
-            // Sort squads by platoon then by squad number for consistent display
-            const sortedSquads = [...squadsData].sort((a, b) => {
-                if (a.platoon < b.platoon) return -1;
-                if (a.platoon > b.platoon) return 1;
-                // If platoons are the same, sort by squad number (e.g., "Squad 1" before "Squad 2")
-                const squadNumA = parseInt(a.squad.replace('Squad ', ''));
-                const squadNumB = parseInt(b.squad.replace('Squad ', ''));
-                return squadNumA - squadNumB;
-            });
-
-            sortedSquads.forEach(squad => {
-                const row = squadPerformanceTableBody.insertRow();
-                const part1TimeDisplay = squad.part1ActualTime !== null ? squad.part1ActualTime.toFixed(2) + 's' : 'N/A';
-                const part2TargetsDisplay = squad.part2ActualTargets !== null ? squad.part2ActualTargets.toFixed(2) : 'N/A';
-                const finalScoreDisplay = squad.finalScore !== null ? squad.finalScore.toFixed(4) : 'N/A';
-
-                row.innerHTML = `
-                    <td class="font-bold">${squad.platoon} ${squad.squad}</td>
-                    <td>${part1TimeDisplay}</td>
-                    <td>${part2TargetsDisplay}</td>
-                    <td>${finalScoreDisplay}</td>
-                    <td>${squad.status}</td>
-                `;
-            });
-        }
-
-
-        // --- Roadmap to Victory Logic ---
-        function generateRoadmap() {
-            roadmapContent.innerHTML = ''; // Clear previous roadmap
-
-            const platoonStatus = {}; // { PlatoonName: { completedSquads: [], pendingSquads: [], avgScore: 0 } }
-
-            // Group squads by platoon and status
-            ['Crusaders', 'Samurai', 'Goonies', 'Nightsalkers'].forEach(platoonName => {
-                platoonStatus[platoonName] = {
-                    completedSquads: [],
-                    pendingSquads: [],
-                    avgScore: 0,
-                    totalScoreSum: 0,
-                    totalSquads: 4
-                };
-                squadsData.filter(s => s.platoon === platoonName).forEach(squad => {
-                    if (squad.status === 'Completed' && squad.finalScore !== null) {
-                        platoonStatus[platoonName].completedSquads.push(squad);
-                        platoonStatus[platoonName].totalScoreSum += squad.finalScore;
-                    } else {
-                        platoonStatus[platoonName].pendingSquads.push(squad);
+            reportContent += "\n--- Platoon Averages ---\n";
+            const platoonAverages = {};
+            competitionData.platoons.forEach(platoon => {
+                let totalScore = 0;
+                let completedSquads = 0;
+                platoon.squads.forEach(squad => {
+                    if (squad.completed) {
+                        totalScore += squad.squadScore;
+                        completedSquads++;
                     }
                 });
-                platoonStatus[platoonName].avgScore = platoonStatus[platoonName].completedSquads.length > 0 ?
-                    platoonStatus[platoonName].totalScoreSum / platoonStatus[platoonName].completedSquads.length : 0;
+                platoonAverages[platoon.name] = {
+                    average: completedSquads > 0 ? totalScore / completedSquads : 0,
+                    completed: completedSquads
+                };
             });
 
-            // Sort platoons by current average score
-            const sortedPlatoons = Object.keys(platoonStatus)
-                .map(platoonName => ({
-                    name: platoonName,
-                    ...platoonStatus[platoonName]
-                }))
-                .sort((a, b) => b.avgScore - a.avgScore);
-
-            if (sortedPlatoons.length === 0) {
-                roadmapContent.innerHTML = '<p class="text-gray-400">No platoons initialized yet. Start by resetting data or waiting for data sync.</p>';
-                return;
+            for (const platoonName in platoonAverages) {
+                reportContent += `\nPlatoon: ${platoonName}\n`;
+                reportContent += `  Average Score: ${platoonAverages[platoonName].average.toFixed(3)}\n`;
+                reportContent += `  Completed Squads: ${platoonAverages[platoonName].completed} / 4\n`;
             }
 
-            const currentLeader = sortedPlatoons[0];
-            const leaderScore = currentLeader.avgScore;
+            // Create a Blob and download it
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'competition_report.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // Clean up the URL object
+            showModal("Report generated and downloaded successfully!");
+        }
 
-            if (currentLeader.completedSquads.length === 0) {
-                 roadmapContent.innerHTML = '<p class="text-gray-400">No scores yet. Start completing runs to see the roadmap!</p>';
-                 return;
-            }
-
-            const header = document.createElement('p');
-            header.className = 'font-bold text-lg text-blue-300';
-            header.textContent = `Current Leader: ${currentLeader.name} (Avg. Score: ${leaderScore.toFixed(4)})`;
-            roadmapContent.appendChild(header);
-
-            sortedPlatoons.forEach(platoon => {
-                if (platoon.name === currentLeader.name && platoon.completedSquads.length === platoon.totalSquads) {
-                    const p = document.createElement('p');
-                    p.innerHTML = `<span class="font-semibold">${platoon.name}:</span> All squads completed! Maintain your lead.`;
-                    roadmapContent.appendChild(p);
-                    return;
-                }
-
-                const p = document.createElement('p');
-                p.className = 'mt-2';
-                let message = `<span class="font-semibold">${platoon.name}:</span> `;
-
-                if (platoon.completedSquads.length === platoon.totalSquads) {
-                    message += `All squads completed with an average score of ${platoon.avgScore.toFixed(4)}. You need higher scores from your completed runs to compete.`;
-                } else {
-                    const remainingSquadsCount = platoon.pendingSquads.length;
-                    const completedSquadsCount = platoon.completedSquads.length;
-
-                    // Calculate the total score needed for this platoon to surpass the leader
-                    // Let S_L = leader's average score
-                    // Let S_P = this platoon's current average score
-                    // Let N_C = number of completed squads for this platoon
-                    // Let N_R = number of remaining squads for this platoon
-                    // Let S_R_avg = average score needed for remaining squads
-                    // Target total score for platoon: (S_L * totalSquads) + epsilon (a small margin to win)
-                    // Current total score sum: platoon.totalScoreSum
-                    // Needed sum from remaining squads: (S_L * totalSquads) - platoon.totalScoreSum + epsilon
-                    // S_R_avg = ( (S_L * totalSquads) - platoon.totalScoreSum + epsilon ) / N_R
-
-                    const epsilon = 0.0001; // Small margin to ensure they "win"
-                    let targetTotalScoreForPlatoon = (leaderScore * platoon.totalSquads) + epsilon;
-                    let neededScoreFromRemainingSquadsSum = targetTotalScoreForPlatoon - platoon.totalScoreSum;
-
-                    if (neededScoreFromRemainingSquadsSum < 0) { // Already ahead or tied, but not all squads done
-                        message += `Currently ahead or tied with the leader (${platoon.avgScore.toFixed(4)}). Keep up the great work with your ${remainingSquadsCount} remaining squads!`;
-                    } else if (remainingSquadsCount > 0) {
-                        const neededAvgScorePerRemainingSquad = neededScoreFromRemainingSquadsSum / remainingSquadsCount;
-
-                        message += `To take the lead, your ${remainingSquadsCount} remaining squads need to average at least <span class="text-green-300 font-bold">${neededAvgScorePerRemainingSquad.toFixed(4)}</span> per squad.`;
-
-                        // Provide actionable advice:
-                        // Assuming average targets hit is around 20-30 and time is 60-120 seconds for a "good" score.
-                        // If score = Targets / Time
-                        // To get neededAvgScorePerRemainingSquad, they could aim for:
-                        // Option 1: A specific time with a good targets score (e.g., 30 targets)
-                        // Time = Targets / Score
-                        const suggestedTargets = 30; // Example good target score
-                        const suggestedTime = suggestedTargets / neededAvgScorePerRemainingSquad;
-
-                        // Option 2: A specific targets score with a good time (e.g., 90 seconds)
-                        // Targets = Score * Time
-                        const suggestedTimeForTargets = 90; // Example good time
-                        const suggestedTargetsForTime = neededAvgScorePerRemainingSquad * suggestedTimeForTargets;
-
-                        message += `<br>This could mean:`;
-                        if (suggestedTime > 0 && suggestedTargetsForTime <= 40) { // Check if targets are realistic
-                            message += ` <span class="text-yellow-300">- Averaging ${suggestedTargets} targets in approximately ${suggestedTime.toFixed(1)} seconds (Part 1).</span>`;
-                        }
-                        if (suggestedTargetsForTime > 0 && suggestedTargetsForTime <= 40) {
-                            message += `<br> <span class="text-yellow-300">- Averaging ${suggestedTargetsForTime.toFixed(1)} targets while completing Part 1 in ${suggestedTimeForTargets.toFixed(1)} seconds.</span>`;
-                        } else {
-                            message += `<br> <span class="text-yellow-300">- Focus on maximizing targets hit and minimizing time for the best possible combined score.</span>`;
-                        }
-
-                    } else {
-                        // No remaining squads, and not in the lead
-                        message += `All squads completed with an average score of ${platoon.avgScore.toFixed(4)}. You need higher scores from your completed runs to compete.`;
+        /**
+         * Resets all competition data after confirmation.
+         */
+        function resetEvent() {
+            showModal("Are you sure you want to reset all competition data? This action cannot be undone.", 'confirm', () => {
+                localStorage.removeItem('competitionData');
+                // Re-initialize competitionData to its default state
+                competitionData = {
+                    platoons: [
+                        { name: "Crusaders", squads: [] },
+                        { name: "Samurai", squads: [] },
+                        { name: "Goonies", squads: [] },
+                        { name: "Nightsalkers", squads: [] }
+                    ]
+                };
+                competitionData.platoons.forEach(platoon => {
+                    for (let i = 1; i <= 4; i++) {
+                        platoon.squads.push({
+                            id: `${platoon.name.toLowerCase()}-squad-${i}`,
+                            name: `Squad ${i}`,
+                            part1: { actualTime: 0, penaltyTime: 0, totalTime: 0 },
+                            part2: { laneScores: [], actualTargets: 0, penaltyTargets: 0, totalTargets: 0, averageTargets: 0 },
+                            squadScore: 0,
+                            completed: false
+                        });
                     }
-                }
-                p.innerHTML = message;
-                roadmapContent.appendChild(p);
+                });
+
+                // Reset UI elements
+                timerDisplay.textContent = formatTime(0);
+                elapsedTime = 0;
+                clearInterval(timerInterval);
+                startTimerBtn.disabled = false;
+                stopTimerBtn.disabled = true;
+                recordPart1Btn.disabled = true;
+                part1PenaltyTimeInput.value = 0;
+                numLanesInput.value = 1;
+                firingLaneInputsDiv.innerHTML = '';
+                part2PenaltyTargetsInput.value = 0;
+
+                renderScoreboard();
+                showModal("Competition data has been reset.");
             });
         }
 
-        // --- Reset All Data Functionality ---
-        resetAllDataBtn.addEventListener('click', async () => {
-            const confirmed = await showMessage(
-                'Are you sure you want to reset all competition data? This action cannot be undone.',
-                true // isConfirm = true
-            );
+        // --- Event Listeners ---
+        startTimerBtn.addEventListener('click', startTimer);
+        stopTimerBtn.addEventListener('click', stopTimer);
+        recordPart1Btn.addEventListener('click', recordPart1);
+        applyPart1PenaltyBtn.addEventListener('click', applyPart1Penalty);
+        generateLanesBtn.addEventListener('click', generateLaneInputs);
+        recordPart2Btn.addEventListener('click', recordPart2);
+        applyPart2PenaltyBtn.addEventListener('click', applyPart2Penalty);
+        generateReportBtn.addEventListener('click', generateReport);
+        resetEventBtn.addEventListener('click', resetEvent);
 
-            if (confirmed) {
-                if (!db || !currentUserId) {
-                    showMessage("Database not ready. Cannot reset data.");
-                    return;
-                }
+        // Initial load and render on page load
+        window.onload = () => {
+            loadData();
+            renderScoreboard();
+            generateLaneInputs(); // Generate initial lane inputs
+        };
 
-                try {
-                    showMessage("Resetting all data... Please wait.");
-                    const squadsCollectionRef = collection(db, `artifacts/${appId}/public/data/squads`);
-                    const querySnapshot = await getDocs(squadsCollectionRef);
-
-                    const deletePromises = [];
-                    querySnapshot.forEach((doc) => {
-                        deletePromises.push(deleteDoc(doc.ref));
-                    });
-
-                    await Promise.all(deletePromises);
-                    console.log("All squad documents deleted from Firestore.");
-
-                    // After deleting, re-initialize default squads
-                    await initializeDefaultSquadsAndSave();
-                    showMessage("All competition data has been reset and default squads re-initialized.");
-
-                    // Reset UI elements that might not be covered by onSnapshot's updateUIBasedOnData
-                    currentSquadId = null;
-                    platoonSelect.value = "";
-                    squadSelect.innerHTML = '<option value="">Select Squad</option>';
-                    updateUIForSelectedSquad(); // This will reset many fields
-                    timerDisplay.textContent = '00:00.00';
-                    elapsedTime = 0;
-                    clearInterval(timerInterval);
-
-                } catch (error) {
-                    console.error("Error resetting data:", error);
-                    showMessage("Failed to reset data. Please check console for details.");
-                }
-            } else {
-                showMessage("Data reset cancelled.");
-            }
-        });
-
-
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // Authenticate and then load data
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUserId = user.uid;
-                    console.log("Authenticated as:", currentUserId);
-                    loadSquadsFromFirestore(); // Start listening for data
-                } else {
-                    // Sign in anonymously if no user is found
-                    try {
-                        if (initialAuthToken) {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                    } catch (error) {
-                        console.error("Firebase authentication error:", error);
-                        showMessage("Authentication failed. Please try refreshing the page.");
-                    }
-                }
-            });
-        });
     </script>
 </body>
 </html>
