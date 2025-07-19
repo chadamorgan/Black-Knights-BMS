@@ -1,20 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-// The raw data provided by the user
+/**
+ * Raw data string containing items separated by semicolons and newlines.
+ * This data will be parsed and displayed in the application.
+ */
 const rawDataString = `7088459; Y088460; Y088468; Y088487; Y089075; Y089086; Y089104; Y396022; Y397595; Y405202; Y405240 W0155301; W0155454; W0155507; W0155581; W0155771; W744708; W806078; W806893; W807999; W808375; Y082975; Y087842; Y088051; Y088389; Y088403 W0154838; W0154957; W0155024; W0155078; W0155088; W0155134; W0155156; W0155179; W0155183; W0155187; W0155193; W0155246; W0155285; W0155291 W0153638; W0153667; W0153886; W0154022; W0154094; W0154095; W0154181; W0154183; W0154187; W0154191; W0154654; W0154692; W0154811; W0154835 W0151707; W0151715; W0151716; W0151738; W0151744; W0151746; W0151772; W0152419; W0152448; W0152452; W0153013; W0153075; W0153103; W0153632 W0150395; W0150573; W0150594; W0150615; W0150647; W0150694; W0150811; W0150854; W0151607; W0151608; W0151629; W0151633; W0151634; W0151683 W0149597; W0149601; W0149709; W0149940; W0150129; W0150140; W0150148; W0150162; W0150166; W0150198; W0150319; W0150326; W0150332; W0150352 WO13D897; W0130910; W0130919; W0130930; W0130950; W0130956; W0130969; W0130973; W0149520; W0149550; W0149583; W0149588; W0149593; W0149596 W0130220; W0130270; W0130297; W0130303; W0130305; W0130326; W0130334; W0130346; W0130358; W0130367; W0130372; W0130486; W0130569; W0130890 W0127162; W0127163; W0128215; W0128386; W0128458; W0128470; W0128472; W0128629; W0128995; W0130006; W0130007; W0130044; W0130052; W0130057 W0124103; W0124116; W0124142; W0124174; W0124390; W0126499; W0126531; W0126544; W0126568; W0126822; W0127098; W0127118; W0127126; W0127146 W0118389; W0118391; W0118402; W0118407; W0118414; W0118415; W0118417; W0118420; W0122829; W0123811; W0123834; W0123835; W0124088; W0124099 W0115514; W0115516; WO118332; W0118336; W0118337; W0118360; W0118362; W0118363; W0118364; W0118365; W0118368; W0118370; W0118373; W0118374 W0109773; WO110173; WO111457; WO1l1517; WO1l1685; W0112150; WO1l2187; W0112195; W0112856; W0112883; W0112911; W0113076; W0113109; W0113121 W0051768; W0051773; W0051923; W0053354; W0053365; W0105932; W0106988; W0108156; W0108170; W0108176; W0108635; W0109736; W0109749; W0109760 W0051020; W0051050; W0051110; W0051150; W0051161; W0051227; W0051273; W0051276; W0051327; W0051335; W0051456; W0051538; W0051659; W0051765 10627966; 10628279; 10768245; 10768267; 10768273; 10768846; 10769040; 10769078; 10770397; 10771281; 10771282; 10771594; 10771598; 7039810 `;
 
-// Helper function to parse the raw data string into a flat array of all individual items
+/**
+ * Parses the raw data string into a flat array of individual data items.
+ * It handles semicolons and spaces within lines as delimiters.
+ * @param {string} rawData - The raw string containing data items.
+ * @returns {string[]} An array of individual data items.
+ */
 const parseData = (rawData) => {
   const allItems = [];
-  // Split by newline first to handle rows
+  // Split the raw data by newline characters to process each line.
   const lines = rawData.split('\n');
   lines.forEach(line => {
-    // Split by semicolon for cells within each line
+    // For each line, split by semicolon to get potential groups of items.
     const parts = line.split(';');
     parts.forEach(part => {
       const trimmedPart = part.trim();
       if (trimmedPart) {
-        // If a part still contains a space, split it further (e.g., "Y405240 W0155301")
+        // If a part still contains a space (e.g., "Y405240 W0155301"),
+        // split it further to get individual items.
         if (trimmedPart.includes(' ')) {
           trimmedPart.split(' ').forEach(subPart => {
             const trimmedSubPart = subPart.trim();
@@ -23,6 +32,7 @@ const parseData = (rawData) => {
             }
           });
         } else {
+          // If no space, it's a single item.
           allItems.push(trimmedPart);
         }
       }
@@ -31,65 +41,105 @@ const parseData = (rawData) => {
   return allItems;
 };
 
-// Main App component
+/**
+ * Main App component for the interactive data highlighter.
+ * It displays a list of data items and allows users to search and lock highlights.
+ */
 const App = () => {
-  // State for the parsed list of all individual data items
+  // State to store the parsed list of all individual data items.
   const [dataItems, setDataItems] = useState([]);
-  // State for the user's input in the search box
+  // State for the user's input in the search box.
   const [inputValue, setInputValue] = useState('');
-  // State for storing the indices of currently highlighted items based on search input
+  // State for storing the indices of currently highlighted items based on search input.
   const [currentHighlightedIndices, setCurrentHighlightedIndices] = useState(new Set());
-  // State for storing the indices of explicitly locked highlighted items
+  // State for storing the indices of explicitly locked highlighted items.
   const [lockedIndices, setLockedIndices] = useState(new Set());
 
-  // Effect to parse the raw data once when the component mounts
+  // useRef to store references to each data item's DOM element for scrolling.
+  const itemRefs = useRef([]);
+
+  /**
+   * useEffect hook to parse the raw data string once when the component mounts.
+   */
   useEffect(() => {
     setDataItems(parseData(rawDataString));
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once on mount.
 
-  // Effect to update currentHighlightedIndices whenever inputValue or dataItems changes
+  /**
+   * useEffect hook to update `currentHighlightedIndices` whenever `inputValue` or `dataItems` changes.
+   * This provides real-time highlighting based on the search query.
+   */
   useEffect(() => {
     const newCurrentHighlightedIndices = new Set();
+    // If the input is empty, clear current highlights.
     if (inputValue.trim() === '') {
       setCurrentHighlightedIndices(newCurrentHighlightedIndices);
       return;
     }
 
+    // Convert input to lowercase for case-insensitive matching.
     const lowerCaseInput = inputValue.toLowerCase();
+    let firstHighlightedIndex = -1; // To store the index of the first highlighted item for scrolling.
 
+    // Iterate through all data items to find matches.
     dataItems.forEach((item, index) => {
-      // Check if the item content (case-insensitive) includes the input value
+      // Check if the item content (case-insensitive) includes the input value.
       if (item.toLowerCase().includes(lowerCaseInput)) {
-        newCurrentHighlightedIndices.add(index); // Store the index
+        newCurrentHighlightedIndices.add(index); // Add the index of the matching item.
+        if (firstHighlightedIndex === -1) {
+          firstHighlightedIndex = index; // Store the first found index.
+        }
       }
     });
     setCurrentHighlightedIndices(newCurrentHighlightedIndices);
-  }, [inputValue, dataItems]); // Re-run when input or data items change
 
-  // Handler for input field changes
+    // Scroll to the first highlighted item if found.
+    if (firstHighlightedIndex !== -1 && itemRefs.current[firstHighlightedIndex]) {
+      itemRefs.current[firstHighlightedIndex].scrollIntoView({
+        behavior: 'smooth', // Smooth scrolling animation.
+        block: 'center'    // Align the element to the center of the visible area.
+      });
+    }
+  }, [inputValue, dataItems]); // Dependencies: re-run when input or data items change.
+
+  /**
+   * Event handler for changes in the search input field.
+   * Updates the `inputValue` state.
+   * @param {Object} event - The change event from the input field.
+   */
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
   };
 
-  // Handler for locking current highlights
+  /**
+   * Event handler for the "Lock Current Highlights" button.
+   * Merges the `currentHighlightedIndices` into `lockedIndices`, making them persistent.
+   * Also clears the current search input and its temporary highlights.
+   */
   const handleLockClick = () => {
-    // Merge current highlights into locked highlights
+    // Create a new Set by combining existing locked indices and current highlighted indices.
     setLockedIndices(prev => new Set([...Array.from(prev), ...Array.from(currentHighlightedIndices)]));
+    // Clear the search input and current highlights after locking.
+    setInputValue('');
+    setCurrentHighlightedIndices(new Set());
   };
 
-  // Handler for clearing all locked highlights
+  /**
+   * Event handler for the "Clear Locked Highlights" button.
+   * Resets the `lockedIndices` state, removing all persistent highlights.
+   */
   const handleClearLockedClick = () => {
     setLockedIndices(new Set());
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center font-sans">
-      {/* Header */}
+      {/* Application Header */}
       <h1 className="text-3xl sm:text-4xl font-extrabold text-blue-800 mb-6 text-center">
         Mobile-Friendly Data Highlighter
       </h1>
 
-      {/* Input / Search Box */}
+      {/* Search Input Section */}
       <div className="w-full max-w-xl mb-4">
         <label htmlFor="search-input" className="block text-gray-700 text-lg font-semibold mb-2">
           Type to Highlight Items:
@@ -104,34 +154,63 @@ const App = () => {
         />
       </div>
 
-      {/* Action Buttons */}
+      {/* Action Buttons Section */}
       <div className="w-full max-w-xl flex flex-col sm:flex-row justify-center gap-3 mb-8">
         <button
           onClick={handleLockClick}
-          className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+          // Disable button if no current highlights to lock
+          disabled={currentHighlightedIndices.size === 0}
+          className={`
+            w-full sm:w-auto px-6 py-3 font-bold rounded-lg shadow-md
+            ${currentHighlightedIndices.size === 0
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'}
+            transition-colors duration-200
+          `}
         >
           Lock Current Highlights
         </button>
         <button
           onClick={handleClearLockedClick}
-          className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-bold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200"
+          // Disable button if no locked highlights to clear
+          disabled={lockedIndices.size === 0}
+          className={`
+            w-full sm:w-auto px-6 py-3 font-bold rounded-lg shadow-md
+            ${lockedIndices.size === 0
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2'}
+            transition-colors duration-200
+          `}
         >
           Clear Locked Highlights
         </button>
       </div>
 
-      {/* Data Display Container */}
+      {/* Data Display Grid */}
       <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
         {dataItems.map((item, index) => {
-          // Determine if the item is currently highlighted by search or explicitly locked
-          const isHighlighted = currentHighlightedIndices.has(index) || lockedIndices.has(index);
+          // Determine highlight state:
+          // 1. Is it explicitly locked (yellow)?
+          const isLocked = lockedIndices.has(index);
+          // 2. Is it currently highlighted by search AND NOT yet locked (red)?
+          const isCurrentlyHighlightedBySearch = currentHighlightedIndices.has(index);
+
+          let highlightClass = 'bg-gray-50 hover:bg-gray-100'; // Default background
+
+          if (isLocked) {
+            highlightClass = 'bg-yellow-300 font-semibold shadow-md border-yellow-500';
+          } else if (isCurrentlyHighlightedBySearch) {
+            highlightClass = 'bg-red-300 font-semibold shadow-md border-red-500';
+          }
+
           return (
             <div
-              key={index}
+              key={index} // Unique key for each item, important for React lists.
+              ref={el => itemRefs.current[index] = el} // Assign ref to the DOM element
               className={`
                 p-3 text-center border border-gray-200 rounded-md
                 transition-all duration-200 ease-in-out
-                ${isHighlighted ? 'bg-yellow-300 font-semibold shadow-md border-yellow-500' : 'bg-gray-50 hover:bg-gray-100'}
+                ${highlightClass}
                 text-sm sm:text-base text-gray-800
               `}
             >
@@ -144,7 +223,11 @@ const App = () => {
       {/* Footer / Instructions */}
       <div className="mt-8 text-center text-gray-600 text-sm sm:text-base">
         <p>
-          Type in the search box to highlight matching items. Click "Lock Current Highlights" to make them persist.
+          Type in the search box to highlight matching items (in <span className="text-red-600 font-semibold">red</span>).
+          The view will automatically scroll to the first match.
+        </p>
+        <p className="mt-2">
+          Click "Lock Current Highlights" to make them persist (in <span className="text-yellow-600 font-semibold">yellow</span>).
           Click "Clear Locked Highlights" to remove all locked highlights.
         </p>
       </div>
