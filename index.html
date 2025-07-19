@@ -1,855 +1,155 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Black Knights BMS Manager</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom styles for better aesthetics and responsiveness */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Light blue-gray background */
-            color: #334155; /* Darker text */
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-        .card {
-            background-color: #ffffff;
-            border-radius: 0.75rem; /* Rounded corners */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-        .btn-primary {
-            background-color: #3b82f6; /* Blue */
-            color: #ffffff;
-        }
-        .btn-primary:hover {
-            background-color: #2563eb; /* Darker blue */
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .btn-danger {
-            background-color: #ef4444; /* Red */
-            color: #ffffff;
-        }
-        .btn-danger:hover {
-            background-color: #dc2626; /* Darker red */
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .btn-secondary {
-            background-color: #6b7280; /* Gray */
-            color: #ffffff;
-        }
-        .btn-secondary:hover {
-            background-color: #4b5563; /* Darker gray */
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .input-field {
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #d1d5db; /* Light gray border */
-            width: 100%;
-            box-sizing: border-box;
-            background-color: #f9fafb; /* Very light gray background */
-        }
-        .input-field:focus {
-            outline: none;
-            border-color: #3b82f6; /* Blue focus ring */
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        th, td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb; /* Light gray border */
-        }
-        th {
-            background-color: #e2e8f0; /* Lighter blue-gray for headers */
-            font-weight: 700;
-            color: #475569;
-        }
-        tr:nth-child(even) {
-            background-color: #f8fafc; /* Alternate row background */
-        }
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 2rem;
-            border: 1px solid #888;
-            width: 90%; /* Responsive width */
-            max-width: 500px;
-            border-radius: 0.75rem;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .timer-display {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #1d4ed8; /* Darker blue for timer */
-            text-align: center;
-            padding: 1rem;
-            background-color: #eff6ff; /* Very light blue background */
-            border-radius: 0.75rem;
-            margin-bottom: 1rem;
-            letter-spacing: 0.05em;
-        }
-        @media (max-width: 768px) {
-            .grid-cols-2 {
-                grid-template-columns: 1fr; /* Stack columns on small screens */
-            }
-            .btn {
-                width: 100%;
-                margin-bottom: 0.75rem;
-            }
-            .btn:last-child {
-                margin-bottom: 0;
-            }
-            table, thead, tbody, th, td, tr {
-                display: block;
-            }
-            thead tr {
-                position: absolute;
-                top: -9999px;
-                left: -9999px;
-            }
-            tr {
-                border: 1px solid #e5e7eb;
-                margin-bottom: 0.75rem;
-                border-radius: 0.5rem;
-            }
-            td {
-                border: none;
-                position: relative;
-                padding-left: 50%;
-                text-align: right;
-            }
-            td:before {
-                position: absolute;
-                top: 0;
-                left: 6px;
-                width: 45%;
-                padding-right: 10px;
-                white-space: nowrap;
-                text-align: left;
-                font-weight: 600;
-                color: #475569;
-            }
-            /* Data labels for mobile table */
-            td:nth-of-type(1):before { content: "Platoon:"; }
-            td:nth-of-type(2):before { content: "Squad:"; }
-            td:nth-of-type(3):before { content: "Time (M:S.ms):"; }
-            td:nth-of-type(4):before { content: "Targets Hit:"; }
-            td:nth-of-type(5):before { content: "Squad Score:"; }
-            td:nth-of-type(6):before { content: "Status:"; }
-        }
-    </style>
-</head>
-<body class="bg-gray-100 p-4">
-    <div class="container">
-        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-8">Platoon Competition Manager</h1>
+import React, { useState, useEffect } from 'react';
 
-        <!-- Modal for confirmations/messages -->
-        <div id="appModal" class="modal hidden">
-            <div class="modal-content">
-                <span class="close-button" onclick="closeModal()">&times;</span>
-                <p id="modalMessage" class="text-lg font-semibold mb-4"></p>
-                <div id="modalButtons" class="flex justify-center gap-4">
-                    <!-- Buttons will be injected here -->
-                </div>
-            </div>
-        </div>
+// The raw data provided by the user
+const rawDataString = `7088459; Y088460; Y088468; Y088487; Y089075; Y089086; Y089104; Y396022; Y397595; Y405202; Y405240 W0155301; W0155454; W0155507; W0155581; W0155771; W744708; W806078; W806893; W807999; W808375; Y082975; Y087842; Y088051; Y088389; Y088403 W0154838; W0154957; W0155024; W0155078; W0155088; W0155134; W0155156; W0155179; W0155183; W0155187; W0155193; W0155246; W0155285; W0155291 W0153638; W0153667; W0153886; W0154022; W0154094; W0154095; W0154181; W0154183; W0154187; W0154191; W0154654; W0154692; W0154811; W0154835 W0151707; W0151715; W0151716; W0151738; W0151744; W0151746; W0151772; W0152419; W0152448; W0152452; W0153013; W0153075; W0153103; W0153632 W0150395; W0150573; W0150594; W0150615; W0150647; W0150694; W0150811; W0150854; W0151607; W0151608; W0151629; W0151633; W0151634; W0151683 W0149597; W0149601; W0149709; W0149940; W0150129; W0150140; W0150148; W0150162; W0150166; W0150198; W0150319; W0150326; W0150332; W0150352 WO13D897; W0130910; W0130919; W0130930; W0130950; W0130956; W0130969; W0130973; W0149520; W0149550; W0149583; W0149588; W0149593; W0149596 W0130220; W0130270; W0130297; W0130303; W0130305; W0130326; W0130334; W0130346; W0130358; W0130367; W0130372; W0130486; W0130569; W0130890 W0127162; W0127163; W0128215; W0128386; W0128458; W0128470; W0128472; W0128629; W0128995; W0130006; W0130007; W0130044; W0130052; W0130057 W0124103; W0124116; W0124142; W0124174; W0124390; W0126499; W0126531; W0126544; W0126568; W0126822; W0127098; W0127118; W0127126; W0127146 W0118389; W0118391; W0118402; W0118407; W0118414; W0118415; W0118417; W0118420; W0122829; W0123811; W0123834; W0123835; W0124088; W0124099 W0115514; W0115516; WO118332; W0118336; W0118337; W0118360; W0118362; W0118363; W0118364; W0118365; W0118368; W0118370; W0118373; W0118374 W0109773; WO110173; WO111457; WO1l1517; WO1l1685; W0112150; WO1l2187; W0112195; W0112856; W0112883; W0112911; W0113076; W0113109; W0113121 W0051768; W0051773; W0051923; W0053354; W0053365; W0105932; W0106988; W0108156; W0108170; W0108176; W0108635; W0109736; W0109749; W0109760 W0051020; W0051050; W0051110; W0051150; W0051161; W0051227; W0051273; W0051276; W0051327; W0051335; W0051456; W0051538; W0051659; W0051765 10627966; 10628279; 10768245; 10768267; 10768273; 10768846; 10769040; 10769078; 10770397; 10771281; 10771282; 10771594; 10771598; 7039810 `;
 
-        <!-- Platoon and Squad Selection -->
-        <div class="card">
-            <h2 class="text-2xl font-bold mb-4 text-gray-700">Select Platoon and Squad</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label for="platoonSelect" class="block text-sm font-medium text-gray-700 mb-1">Platoon:</label>
-                    <select id="platoonSelect" class="input-field">
-                        <option value="Crusaders">Crusaders</option>
-                        <option value="Samurai">Samurai</option>
-                        <option value="Goonies">Goonies</option>
-                        <option value="Nightsalkers">Nightsalkers</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="squadSelect" class="block text-sm font-medium text-gray-700 mb-1">Squad:</label>
-                    <select id="squadSelect" class="input-field">
-                        <option value="Squad 1">Squad 1</option>
-                        <option value="Squad 2">Squad 2</option>
-                        <option value="Squad 3">Squad 3</option>
-                        <option value="Squad 4">Squad 4</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+// Helper function to parse the raw data string into a flat array of all individual items
+const parseData = (rawData) => {
+  const allItems = [];
+  // Split by newline first to handle rows
+  const lines = rawData.split('\n');
+  lines.forEach(line => {
+    // Split by semicolon for cells within each line
+    const parts = line.split(';');
+    parts.forEach(part => {
+      const trimmedPart = part.trim();
+      if (trimmedPart) {
+        // If a part still contains a space, split it further (e.g., "Y405240 W0155301")
+        if (trimmedPart.includes(' ')) {
+          trimmedPart.split(' ').forEach(subPart => {
+            const trimmedSubPart = subPart.trim();
+            if (trimmedSubPart) {
+              allItems.push(trimmedSubPart);
+            }
+          });
+        } else {
+          allItems.push(trimmedPart);
+        }
+      }
+    });
+  });
+  return allItems;
+};
 
-        <!-- Part 1: Equipment Move -->
-        <div class="card">
-            <h2 class="text-2xl font-bold mb-4 text-gray-700">Part 1: Equipment Move (Timed)</h2>
-            <div class="timer-display" id="timerDisplay">00:00.000</div>
-            <div class="flex flex-wrap gap-4 mb-4">
-                <button id="startTimerBtn" class="btn btn-primary flex-grow">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    Start Timer
-                </button>
-                <button id="stopTimerBtn" class="btn btn-danger flex-grow" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
-                    Stop Timer
-                </button>
-                <button id="recordPart1Btn" class="btn btn-secondary flex-grow" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save"><path d="M19 21H5a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h10l4 4v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                    Record Time
-                </button>
-            </div>
-            <div class="mb-4">
-                <label for="part1PenaltyTime" class="block text-sm font-medium text-gray-700 mb-1">Part 1 Penalty (seconds):</label>
-                <input type="number" id="part1PenaltyTime" class="input-field" value="0" min="0">
-            </div>
-            <button id="applyPart1PenaltyBtn" class="btn btn-secondary w-full">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-timer-reset"><path d="M10 2h4"/><path d="M12 14v4"/><path d="M4 13a8 8 0 0 0 15.6 2"/><path d="M2 9.5C2 7 4 5 6.5 5H18a2 2 0 0 1 2 2v.5"/><path d="M9 9l3-3 3 3"/></svg>
-                Apply Part 1 Penalty
-            </button>
-        </div>
+// Main App component
+const App = () => {
+  // State for the parsed list of all individual data items
+  const [dataItems, setDataItems] = useState([]);
+  // State for the user's input in the search box
+  const [inputValue, setInputValue] = useState('');
+  // State for storing the indices of currently highlighted items based on search input
+  const [currentHighlightedIndices, setCurrentHighlightedIndices] = useState(new Set());
+  // State for storing the indices of explicitly locked highlighted items
+  const [lockedIndices, setLockedIndices] = useState(new Set());
 
-        <!-- Part 2: Firing Range -->
-        <div class="card">
-            <h2 class="text-2xl font-bold mb-4 text-gray-700">Part 2: Firing Range (Manual Entry)</h2>
-            <div class="mb-4">
-                <label for="numLanes" class="block text-sm font-medium text-gray-700 mb-1">Number of Firing Lanes:</label>
-                <input type="number" id="numLanes" class="input-field" value="1" min="1" max="40">
-            </div>
-            <button id="generateLanesBtn" class="btn btn-secondary w-full mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grid-3x3"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
-                Generate Lane Inputs
-            </button>
-            <div id="firingLaneInputs" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <!-- Firing lane input fields will be generated here -->
-            </div>
-            <div class="mb-4">
-                <label for="part2PenaltyTargets" class="block text-sm font-medium text-gray-700 mb-1">Part 2 Penalty (targets to remove):</label>
-                <input type="number" id="part2PenaltyTargets" class="input-field" value="0" min="0">
-            </div>
-            <button id="recordPart2Btn" class="btn btn-primary w-full mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                Record Firing Scores
-            </button>
-            <button id="applyPart2PenaltyBtn" class="btn btn-secondary w-full">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-circle"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
-                Apply Part 2 Penalty
-            </button>
-        </div>
+  // Effect to parse the raw data once when the component mounts
+  useEffect(() => {
+    setDataItems(parseData(rawDataString));
+  }, []);
 
-        <!-- Scoreboard -->
-        <div class="card">
-            <h2 class="text-2xl font-bold mb-4 text-gray-700">Scoreboard</h2>
-            <div class="overflow-x-auto">
-                <table id="scoreboard" class="min-w-full">
-                    <thead>
-                        <tr>
-                            <th>Platoon</th>
-                            <th>Squad</th>
-                            <th>Time (M:S.ms)</th>
-                            <th>Targets Hit</th>
-                            <th>Squad Score</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Squad scores will be rendered here -->
-                    </tbody>
-                </table>
-            </div>
-            <h3 class="text-xl font-bold mt-6 mb-3 text-gray-700">Platoon Averages</h3>
-            <div class="overflow-x-auto">
-                <table id="platoonAverages" class="min-w-full">
-                    <thead>
-                        <tr>
-                            <th>Platoon</th>
-                            <th>Average Score</th>
-                            <th>Completed Squads</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Platoon averages will be rendered here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  // Effect to update currentHighlightedIndices whenever inputValue or dataItems changes
+  useEffect(() => {
+    const newCurrentHighlightedIndices = new Set();
+    if (inputValue.trim() === '') {
+      setCurrentHighlightedIndices(newCurrentHighlightedIndices);
+      return;
+    }
 
-        <!-- Report and Reset -->
-        <div class="card flex flex-wrap gap-4 justify-center">
-            <button id="generateReportBtn" class="btn btn-primary flex-grow md:flex-grow-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
-                Generate Report
-            </button>
-            <button id="resetEventBtn" class="btn btn-danger flex-grow md:flex-grow-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.76 2.75L3 8"/><path d="M3 3v5h5"/></svg>
-                Reset Event
-            </button>
-        </div>
+    const lowerCaseInput = inputValue.toLowerCase();
+
+    dataItems.forEach((item, index) => {
+      // Check if the item content (case-insensitive) includes the input value
+      if (item.toLowerCase().includes(lowerCaseInput)) {
+        newCurrentHighlightedIndices.add(index); // Store the index
+      }
+    });
+    setCurrentHighlightedIndices(newCurrentHighlightedIndices);
+  }, [inputValue, dataItems]); // Re-run when input or data items change
+
+  // Handler for input field changes
+  const handleInputChange = (event) => {
+    setInputValue(event.target.value);
+  };
+
+  // Handler for locking current highlights
+  const handleLockClick = () => {
+    // Merge current highlights into locked highlights
+    setLockedIndices(prev => new Set([...Array.from(prev), ...Array.from(currentHighlightedIndices)]));
+  };
+
+  // Handler for clearing all locked highlights
+  const handleClearLockedClick = () => {
+    setLockedIndices(new Set());
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center font-sans">
+      {/* Header */}
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-blue-800 mb-6 text-center">
+        Mobile-Friendly Data Highlighter
+      </h1>
+
+      {/* Input / Search Box */}
+      <div className="w-full max-w-xl mb-4">
+        <label htmlFor="search-input" className="block text-gray-700 text-lg font-semibold mb-2">
+          Type to Highlight Items:
+        </label>
+        <input
+          id="search-input"
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          placeholder="Start typing a value (e.g., 'W015' or 'Y08')"
+          className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 text-base"
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="w-full max-w-xl flex flex-col sm:flex-row justify-center gap-3 mb-8">
+        <button
+          onClick={handleLockClick}
+          className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+        >
+          Lock Current Highlights
+        </button>
+        <button
+          onClick={handleClearLockedClick}
+          className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-bold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200"
+        >
+          Clear Locked Highlights
+        </button>
+      </div>
+
+      {/* Data Display Container */}
+      <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        {dataItems.map((item, index) => {
+          // Determine if the item is currently highlighted by search or explicitly locked
+          const isHighlighted = currentHighlightedIndices.has(index) || lockedIndices.has(index);
+          return (
+            <div
+              key={index}
+              className={`
+                p-3 text-center border border-gray-200 rounded-md
+                transition-all duration-200 ease-in-out
+                ${isHighlighted ? 'bg-yellow-300 font-semibold shadow-md border-yellow-500' : 'bg-gray-50 hover:bg-gray-100'}
+                text-sm sm:text-base text-gray-800
+              `}
+            >
+              {item}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer / Instructions */}
+      <div className="mt-8 text-center text-gray-600 text-sm sm:text-base">
+        <p>
+          Type in the search box to highlight matching items. Click "Lock Current Highlights" to make them persist.
+          Click "Clear Locked Highlights" to remove all locked highlights.
+        </p>
+      </div>
     </div>
+  );
+};
 
-    <script>
-        // Data structure to hold all competition information
-        let competitionData = {
-            platoons: [
-                { name: "Crusaders", squads: [] },
-                { name: "Samurai", squads: [] },
-                { name: "Goonies", squads: [] },
-                { name: "Nightsalkers", squads: [] }
-            ]
-        };
-
-        // Initialize squads for each platoon
-        // Each platoon has 4 squads
-        competitionData.platoons.forEach(platoon => {
-            for (let i = 1; i <= 4; i++) {
-                platoon.squads.push({
-                    id: `${platoon.name.toLowerCase()}-squad-${i}`,
-                    name: `Squad ${i}`,
-                    part1: { actualTime: 0, penaltyTime: 0, totalTime: 0 }, // Time in milliseconds
-                    part2: { laneScores: [], actualTargets: 0, penaltyTargets: 0, totalTargets: 0, averageTargets: 0 },
-                    squadScore: 0,
-                    completed: false // True when both Part 1 and Part 2 are recorded
-                });
-            }
-        });
-
-        // --- DOM Elements ---
-        const platoonSelect = document.getElementById('platoonSelect');
-        const squadSelect = document.getElementById('squadSelect');
-
-        const timerDisplay = document.getElementById('timerDisplay');
-        const startTimerBtn = document.getElementById('startTimerBtn');
-        const stopTimerBtn = document.getElementById('stopTimerBtn');
-        const recordPart1Btn = document.getElementById('recordPart1Btn');
-        const part1PenaltyTimeInput = document.getElementById('part1PenaltyTime');
-        const applyPart1PenaltyBtn = document.getElementById('applyPart1PenaltyBtn');
-
-        const numLanesInput = document.getElementById('numLanes');
-        const generateLanesBtn = document.getElementById('generateLanesBtn');
-        const firingLaneInputsDiv = document.getElementById('firingLaneInputs');
-        const part2PenaltyTargetsInput = document.getElementById('part2PenaltyTargets');
-        const recordPart2Btn = document.getElementById('recordPart2Btn');
-        const applyPart2PenaltyBtn = document.getElementById('applyPart2PenaltyBtn');
-
-        const scoreboardBody = document.querySelector('#scoreboard tbody');
-        const platoonAveragesBody = document.querySelector('#platoonAverages tbody');
-        const generateReportBtn = document.getElementById('generateReportBtn');
-        const resetEventBtn = document.getElementById('resetEventBtn');
-
-        const appModal = document.getElementById('appModal');
-        const modalMessage = document.getElementById('modalMessage');
-        const modalButtons = document.getElementById('modalButtons');
-
-        // --- Timer Variables ---
-        let timerInterval;
-        let startTime;
-        let elapsedTime = 0; // Stores time in milliseconds
-
-        // --- Modal Functions ---
-        function showModal(message, type = 'alert', onConfirm = null) {
-            modalMessage.textContent = message;
-            modalButtons.innerHTML = ''; // Clear previous buttons
-
-            if (type === 'confirm') {
-                const confirmBtn = document.createElement('button');
-                confirmBtn.textContent = 'Confirm';
-                confirmBtn.className = 'btn btn-danger';
-                confirmBtn.onclick = () => {
-                    if (onConfirm) onConfirm();
-                    closeModal();
-                };
-                modalButtons.appendChild(confirmBtn);
-
-                const cancelBtn = document.createElement('button');
-                cancelBtn.textContent = 'Cancel';
-                cancelBtn.className = 'btn btn-secondary';
-                cancelBtn.onclick = closeModal;
-                modalButtons.appendChild(cancelBtn);
-            } else { // 'alert' type
-                const okBtn = document.createElement('button');
-                okBtn.textContent = 'OK';
-                okBtn.className = 'btn btn-primary';
-                okBtn.onclick = closeModal;
-                modalButtons.appendChild(okBtn);
-            }
-            appModal.classList.remove('hidden');
-        }
-
-        function closeModal() {
-            appModal.classList.add('hidden');
-        }
-
-        // --- Utility Functions ---
-
-        /**
-         * Formats milliseconds into MM:SS.ms string.
-         * @param {number} ms - Time in milliseconds.
-         * @returns {string} Formatted time string.
-         */
-        function formatTime(ms) {
-            const minutes = Math.floor(ms / 60000);
-            const seconds = Math.floor((ms % 60000) / 1000);
-            const milliseconds = Math.floor(ms % 1000);
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
-        }
-
-        /**
-         * Converts formatted time string (MM:SS.ms) to milliseconds.
-         * @param {string} timeString - Formatted time string.
-         * @returns {number} Time in milliseconds.
-         */
-        function parseTime(timeString) {
-            const parts = timeString.split(/[:.]/);
-            if (parts.length !== 3) return 0; // Invalid format
-            const minutes = parseInt(parts[0], 10);
-            const seconds = parseInt(parts[1], 10);
-            const milliseconds = parseInt(parts[2], 10);
-            return (minutes * 60 * 1000) + (seconds * 1000) + milliseconds;
-        }
-
-        /**
-         * Gets the currently selected squad object from competitionData.
-         * @returns {object|null} The selected squad object or null if not found.
-         */
-        function getSelectedSquad() {
-            const platoonName = platoonSelect.value;
-            const squadName = squadSelect.value;
-            const platoon = competitionData.platoons.find(p => p.name === platoonName);
-            if (platoon) {
-                return platoon.squads.find(s => s.name === squadName);
-            }
-            return null;
-        }
-
-        /**
-         * Saves the current competition data to localStorage.
-         */
-        function saveData() {
-            try {
-                localStorage.setItem('competitionData', JSON.stringify(competitionData));
-            } catch (e) {
-                console.error("Error saving to localStorage:", e);
-                showModal("Could not save data. Your browser's storage might be full or disabled.", 'alert');
-            }
-        }
-
-        /**
-         * Loads competition data from localStorage.
-         */
-        function loadData() {
-            try {
-                const storedData = localStorage.getItem('competitionData');
-                if (storedData) {
-                    const parsedData = JSON.parse(storedData);
-                    // Deep merge to preserve structure for new fields if any
-                    competitionData.platoons.forEach(platoon => {
-                        const storedPlatoon = parsedData.platoons.find(p => p.name === platoon.name);
-                        if (storedPlatoon) {
-                            platoon.squads.forEach(squad => {
-                                const storedSquad = storedPlatoon.squads.find(s => s.id === squad.id);
-                                if (storedSquad) {
-                                    Object.assign(squad.part1, storedSquad.part1);
-                                    Object.assign(squad.part2, storedSquad.part2);
-                                    squad.squadScore = storedSquad.squadScore || 0;
-                                    squad.completed = storedSquad.completed || false;
-                                }
-                            });
-                        }
-                    });
-                }
-            } catch (e) {
-                console.error("Error loading from localStorage:", e);
-                showModal("Could not load saved data. Data might be corrupted.", 'alert');
-                localStorage.removeItem('competitionData'); // Clear corrupted data
-            }
-        }
-
-        /**
-         * Calculates the squad's total time, total targets, and final score.
-         * Updates the squad object and saves data.
-         * @param {object} squad - The squad object to calculate scores for.
-         */
-        function calculateSquadScore(squad) {
-            // Calculate total time for Part 1 (actual + penalty)
-            squad.part1.totalTime = squad.part1.actualTime + (parseFloat(part1PenaltyTimeInput.value) * 1000); // Convert seconds to ms
-
-            // Calculate total targets for Part 2 (actual - penalty)
-            squad.part2.totalTargets = Math.max(0, squad.part2.actualTargets - parseInt(part2PenaltyTargetsInput.value, 10));
-
-            // Calculate squad score: Targets Hit / Total Time (convert time to seconds for division)
-            if (squad.part1.totalTime > 0) {
-                squad.squadScore = squad.part2.totalTargets / (squad.part1.totalTime / 1000);
-            } else {
-                squad.squadScore = 0; // Avoid division by zero
-            }
-
-            // Mark as completed if both parts have valid scores
-            squad.completed = (squad.part1.totalTime > 0 && squad.part2.totalTargets >= 0);
-
-            saveData();
-            renderScoreboard();
-        }
-
-        /**
-         * Renders/updates the scoreboard and platoon averages tables.
-         */
-        function renderScoreboard() {
-            scoreboardBody.innerHTML = ''; // Clear current scoreboard
-            platoonAveragesBody.innerHTML = ''; // Clear current platoon averages
-
-            const platoonScores = {}; // To store total scores and count of completed squads per platoon
-
-            competitionData.platoons.forEach(platoon => {
-                platoonScores[platoon.name] = { totalScore: 0, completedSquads: 0 };
-
-                platoon.squads.forEach(squad => {
-                    const row = scoreboardBody.insertRow();
-                    row.insertCell(0).textContent = platoon.name;
-                    row.insertCell(1).textContent = squad.name;
-                    row.insertCell(2).textContent = formatTime(squad.part1.totalTime);
-                    row.insertCell(3).textContent = squad.part2.totalTargets.toFixed(2);
-                    row.insertCell(4).textContent = squad.squadScore.toFixed(3); // Display with more precision
-                    row.insertCell(5).textContent = squad.completed ? 'Completed' : 'Pending';
-                    row.className = squad.completed ? 'bg-green-50' : 'bg-yellow-50'; // Visual cue for completion
-
-                    if (squad.completed) {
-                        platoonScores[platoon.name].totalScore += squad.squadScore;
-                        platoonScores[platoon.name].completedSquads++;
-                    }
-                });
-            });
-
-            // Render Platoon Averages
-            for (const platoonName in platoonScores) {
-                const avgData = platoonScores[platoonName];
-                const averageScore = avgData.completedSquads > 0 ? avgData.totalScore / avgData.completedSquads : 0;
-                const row = platoonAveragesBody.insertRow();
-                row.insertCell(0).textContent = platoonName;
-                row.insertCell(1).textContent = averageScore.toFixed(3);
-                row.insertCell(2).textContent = `${avgData.completedSquads} / 4`;
-            }
-        }
-
-        // --- Part 1: Equipment Move Functions ---
-
-        /**
-         * Starts the timer for Part 1.
-         */
-        function startTimer() {
-            // Disable start button, enable stop and record buttons
-            startTimerBtn.disabled = true;
-            stopTimerBtn.disabled = false;
-            recordPart1Btn.disabled = true; // Can only record after stopping
-
-            startTime = Date.now() - elapsedTime; // Resume from last elapsed time
-            timerInterval = setInterval(() => {
-                elapsedTime = Date.now() - startTime;
-                timerDisplay.textContent = formatTime(elapsedTime);
-            }, 10); // Update every 10 milliseconds for precision
-        }
-
-        /**
-         * Stops the timer and enables recording the time.
-         */
-        function stopTimer() {
-            clearInterval(timerInterval);
-            startTimerBtn.disabled = false;
-            stopTimerBtn.disabled = true;
-            recordPart1Btn.disabled = false;
-        }
-
-        /**
-         * Records the elapsed time for Part 1 for the selected squad.
-         */
-        function recordPart1() {
-            const squad = getSelectedSquad();
-            if (squad) {
-                squad.part1.actualTime = elapsedTime;
-                calculateSquadScore(squad);
-                showModal(`${squad.name} (Platoon ${platoonSelect.value}) Part 1 time recorded: ${formatTime(elapsedTime)}`);
-                // Reset timer for next use
-                elapsedTime = 0;
-                timerDisplay.textContent = formatTime(0);
-                recordPart1Btn.disabled = true; // Disable after recording
-            } else {
-                showModal("Please select a platoon and squad first.", 'alert');
-            }
-        }
-
-        /**
-         * Applies penalty time to Part 1 for the selected squad.
-         */
-        function applyPart1Penalty() {
-            const squad = getSelectedSquad();
-            if (squad) {
-                const penaltySeconds = parseFloat(part1PenaltyTimeInput.value);
-                if (isNaN(penaltySeconds) || penaltySeconds < 0) {
-                    showModal("Please enter a valid positive number for penalty time.", 'alert');
-                    return;
-                }
-                squad.part1.penaltyTime = penaltySeconds * 1000; // Convert seconds to ms
-                calculateSquadScore(squad);
-                showModal(`Part 1 penalty of ${penaltySeconds} seconds applied to ${squad.name} (Platoon ${platoonSelect.value}).`);
-            } else {
-                showModal("Please select a platoon and squad first.", 'alert');
-            }
-        }
-
-        // --- Part 2: Firing Range Functions ---
-
-        /**
-         * Generates input fields for firing lanes based on the number of lanes specified.
-         */
-        function generateLaneInputs() {
-            const numLanes = parseInt(numLanesInput.value, 10);
-            if (isNaN(numLanes) || numLanes <= 0) {
-                showModal("Please enter a valid number of firing lanes (at least 1).", 'alert');
-                return;
-            }
-
-            firingLaneInputsDiv.innerHTML = ''; // Clear existing inputs
-            for (let i = 1; i <= numLanes; i++) {
-                const div = document.createElement('div');
-                div.className = 'flex flex-col';
-                div.innerHTML = `
-                    <label for="lane-${i}" class="block text-sm font-medium text-gray-700 mb-1">Lane ${i} Targets Hit (out of 40):</label>
-                    <input type="number" id="lane-${i}" class="input-field" value="0" min="0" max="40">
-                `;
-                firingLaneInputsDiv.appendChild(div);
-            }
-        }
-
-        /**
-         * Records the firing range scores for the selected squad.
-         */
-        function recordPart2() {
-            const squad = getSelectedSquad();
-            if (squad) {
-                const numLanes = parseInt(numLanesInput.value, 10);
-                const laneScores = [];
-                let totalTargets = 0;
-
-                for (let i = 1; i <= numLanes; i++) {
-                    const input = document.getElementById(`lane-${i}`);
-                    if (!input) {
-                        showModal(`Error: Lane ${i} input not found. Please regenerate lanes.`, 'alert');
-                        return;
-                    }
-                    const score = parseInt(input.value, 10);
-                    if (isNaN(score) || score < 0 || score > 40) {
-                        showModal(`Please enter a valid number of targets hit (0-40) for Lane ${i}.`, 'alert');
-                        return;
-                    }
-                    laneScores.push(score);
-                    totalTargets += score;
-                }
-
-                squad.part2.laneScores = laneScores;
-                squad.part2.actualTargets = totalTargets;
-                squad.part2.averageTargets = numLanes > 0 ? totalTargets / numLanes : 0;
-
-                calculateSquadScore(squad);
-                showModal(`${squad.name} (Platoon ${platoonSelect.value}) Part 2 scores recorded. Total targets: ${totalTargets}. Average: ${squad.part2.averageTargets.toFixed(2)}`);
-            } else {
-                showModal("Please select a platoon and squad first.", 'alert');
-            }
-        }
-
-        /**
-         * Applies penalty targets to Part 2 for the selected squad.
-         */
-        function applyPart2Penalty() {
-            const squad = getSelectedSquad();
-            if (squad) {
-                const penaltyTargets = parseInt(part2PenaltyTargetsInput.value, 10);
-                if (isNaN(penaltyTargets) || penaltyTargets < 0) {
-                    showModal("Please enter a valid positive number for penalty targets.", 'alert');
-                    return;
-                }
-                squad.part2.penaltyTargets = penaltyTargets;
-                calculateSquadScore(squad);
-                showModal(`Part 2 penalty of ${penaltyTargets} targets applied to ${squad.name} (Platoon ${platoonSelect.value}).`);
-            } else {
-                showModal("Please select a platoon and squad first.", 'alert');
-            }
-        }
-
-        // --- Report and Reset Functions ---
-
-        /**
-         * Generates a text report of all competition data and allows downloading.
-         */
-        function generateReport() {
-            let reportContent = "Platoon Competition Report\n\n";
-
-            reportContent += "--- Squad Scores ---\n";
-            competitionData.platoons.forEach(platoon => {
-                platoon.squads.forEach(squad => {
-                    reportContent += `\nPlatoon: ${platoon.name}, Squad: ${squad.name}\n`;
-                    reportContent += `  Part 1 - Actual Time: ${formatTime(squad.part1.actualTime)}\n`;
-                    reportContent += `  Part 1 - Penalty Time: ${squad.part1.penaltyTime / 1000} seconds\n`;
-                    reportContent += `  Part 1 - Total Time: ${formatTime(squad.part1.totalTime)}\n`;
-                    reportContent += `  Part 2 - Actual Targets Hit (Sum): ${squad.part2.actualTargets}\n`;
-                    reportContent += `  Part 2 - Average Targets Hit (per lane): ${squad.part2.averageTargets.toFixed(2)}\n`;
-                    reportContent += `  Part 2 - Penalty Targets: ${squad.part2.penaltyTargets}\n`;
-                    reportContent += `  Part 2 - Total Targets (after penalty): ${squad.part2.totalTargets.toFixed(2)}\n`;
-                    reportContent += `  Squad Score (Targets / Time): ${squad.squadScore.toFixed(3)}\n`;
-                    reportContent += `  Status: ${squad.completed ? 'Completed' : 'Pending'}\n`;
-                });
-            });
-
-            reportContent += "\n--- Platoon Averages ---\n";
-            const platoonAverages = {};
-            competitionData.platoons.forEach(platoon => {
-                let totalScore = 0;
-                let completedSquads = 0;
-                platoon.squads.forEach(squad => {
-                    if (squad.completed) {
-                        totalScore += squad.squadScore;
-                        completedSquads++;
-                    }
-                });
-                platoonAverages[platoon.name] = {
-                    average: completedSquads > 0 ? totalScore / completedSquads : 0,
-                    completed: completedSquads
-                };
-            });
-
-            for (const platoonName in platoonAverages) {
-                reportContent += `\nPlatoon: ${platoonName}\n`;
-                reportContent += `  Average Score: ${platoonAverages[platoonName].average.toFixed(3)}\n`;
-                reportContent += `  Completed Squads: ${platoonAverages[platoonName].completed} / 4\n`;
-            }
-
-            // Create a Blob and download it
-            const blob = new Blob([reportContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'competition_report.txt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url); // Clean up the URL object
-            showModal("Report generated and downloaded successfully!");
-        }
-
-        /**
-         * Resets all competition data after confirmation.
-         */
-        function resetEvent() {
-            showModal("Are you sure you want to reset all competition data? This action cannot be undone.", 'confirm', () => {
-                localStorage.removeItem('competitionData');
-                // Re-initialize competitionData to its default state
-                competitionData = {
-                    platoons: [
-                        { name: "Crusaders", squads: [] },
-                        { name: "Samurai", squads: [] },
-                        { name: "Goonies", squads: [] },
-                        { name: "Nightsalkers", squads: [] }
-                    ]
-                };
-                competitionData.platoons.forEach(platoon => {
-                    for (let i = 1; i <= 4; i++) {
-                        platoon.squads.push({
-                            id: `${platoon.name.toLowerCase()}-squad-${i}`,
-                            name: `Squad ${i}`,
-                            part1: { actualTime: 0, penaltyTime: 0, totalTime: 0 },
-                            part2: { laneScores: [], actualTargets: 0, penaltyTargets: 0, totalTargets: 0, averageTargets: 0 },
-                            squadScore: 0,
-                            completed: false
-                        });
-                    }
-                });
-
-                // Reset UI elements
-                timerDisplay.textContent = formatTime(0);
-                elapsedTime = 0;
-                clearInterval(timerInterval);
-                startTimerBtn.disabled = false;
-                stopTimerBtn.disabled = true;
-                recordPart1Btn.disabled = true;
-                part1PenaltyTimeInput.value = 0;
-                numLanesInput.value = 1;
-                firingLaneInputsDiv.innerHTML = '';
-                part2PenaltyTargetsInput.value = 0;
-
-                renderScoreboard();
-                showModal("Competition data has been reset.");
-            });
-        }
-
-        // --- Event Listeners ---
-        startTimerBtn.addEventListener('click', startTimer);
-        stopTimerBtn.addEventListener('click', stopTimer);
-        recordPart1Btn.addEventListener('click', recordPart1);
-        applyPart1PenaltyBtn.addEventListener('click', applyPart1Penalty);
-        generateLanesBtn.addEventListener('click', generateLaneInputs);
-        recordPart2Btn.addEventListener('click', recordPart2);
-        applyPart2PenaltyBtn.addEventListener('click', applyPart2Penalty);
-        generateReportBtn.addEventListener('click', generateReport);
-        resetEventBtn.addEventListener('click', resetEvent);
-
-        // Initial load and render on page load
-        window.onload = () => {
-            loadData();
-            renderScoreboard();
-            generateLaneInputs(); // Generate initial lane inputs
-        };
-
-    </script>
-</body>
-</html>
+export default App;
